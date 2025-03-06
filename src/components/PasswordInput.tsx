@@ -56,9 +56,12 @@ const PasswordInput = forwardRef<HTMLInputElement, Props>(
             padding: "11px 24px",
           },
           "& .MuiInputLabel-root": {
-            transform: "translate(24px, 11px) scale(1)",
+            fontSize: "14px",
+            fontWeight: 500,
+            color: "#8F92A1",
+            transform: "translate(24px, 12px) scale(1)",
             "&.MuiInputLabel-shrink": {
-              transform: "translate(14px, -9px) scale(0.75)",
+              transform: "translate(14px, -9px) scale(0.85)",
             },
           },
         }}
