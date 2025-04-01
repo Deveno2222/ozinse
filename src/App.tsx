@@ -22,6 +22,7 @@ import GenresScreen from "./pages/(logged-in)/GenresScreen";
 import AgeScreen from "./pages/(logged-in)/AgeScreen";
 import ProjectSearch from "./pages/(logged-in)/ProjectSearch";
 import EditScreen from "./pages/(logged-in)/EditScreen";
+import AuthProvider from "./features/layout/components/AuthProvider";
 
 Modal.setAppElement("#root");
 
@@ -33,7 +34,11 @@ const router = createBrowserRouter([
     element: <Navigate to="/project" replace />,
   },
   {
-    element: <Layout />,
+    element: (
+      <AuthProvider>
+        <Layout />
+      </AuthProvider>
+    ),
 
     children: [
       { path: "/project", element: <MainScreen /> },

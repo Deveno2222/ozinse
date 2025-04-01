@@ -1,9 +1,20 @@
 import mainLogo from "../../../assets/mainLogo.svg";
 import bell from "../../../assets/Bell.svg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import SearchInput from "@/components/SearchInput";
+import { useDispatch } from "react-redux";
+import { logout } from "@/features/auth/model/authSlice";
 
 const Header = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const onLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+    console.log("Выход из системы");
+  };
+  
   return (
     <div className="flex items-center h-[100px] px-5 mb-8">
       {/* Логотип и поиск */}
@@ -18,7 +29,7 @@ const Header = () => {
         <div className="flex-1 max-w-[449px]">
           <SearchInput />
         </div>
-        <Link to="/login" className="flex items-center gap-2">
+        <div onClick={onLogout} className="flex items-center gap-2">
           <span className="text-[#8F92A1] font-medium hover:underline cursor-pointer">
             Выйти
           </span>
@@ -27,7 +38,7 @@ const Header = () => {
             src={bell}
             alt="Выйти"
           />
-        </Link>
+        </div>
       </div>
     </div>
   );

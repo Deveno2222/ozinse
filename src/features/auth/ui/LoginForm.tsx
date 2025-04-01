@@ -3,6 +3,10 @@ import CustomButton from "../../../components/CustomButton";
 import CustomInput from "../../../components/CustomInput";
 import type { LoginForm } from "../types";
 import PasswordInput from "../../../components/PasswordInput";
+import { useLoginMutation } from "../api/authApi";
+import { useDispatch } from "react-redux";
+import { setToken } from "../model/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const LoginForm = () => {
   const { control, handleSubmit, formState, reset } = useForm<LoginForm>({
@@ -12,11 +16,24 @@ const LoginForm = () => {
     },
   });
 
+  const [onLogin] = useLoginMutation();
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const { errors } = formState;
 
-  const login = (data: LoginForm) => {
-    console.log(data);
-    reset();
+  const login = async (data: LoginForm) => {
+    try {
+      const response = await onLogin(data).unwrap();
+      if (response) {
+        dispatch(setToken(response.result));
+        navigate("/");
+      }
+      reset();
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
   return (
