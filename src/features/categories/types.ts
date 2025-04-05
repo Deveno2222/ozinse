@@ -1,3 +1,5 @@
 export interface ICategory {
-  category: string;
+  categoryId: number;
+  name: string;
+  countOfMovies: number;
 }

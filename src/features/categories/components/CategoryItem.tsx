@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { ICategory } from "../types";
 
 interface Props {
   deleteModal: () => void;
+  onEdit: () => void;
+  data: ICategory;
 }
 
-const CategoryItem = ({ deleteModal }: Props) => {
+const CategoryItem = ({ deleteModal, data, onEdit }: Props) => {
   const [isActive, setIsActive] = useState(false);
 
   return (
@@ -19,7 +22,7 @@ const CategoryItem = ({ deleteModal }: Props) => {
           isActive ? "text-blueUsed" : ""
         } transition-colors duration-150 ease-in-out`}
       >
-        Мультфильм
+        {data.name}
       </p>
       <div className="flex justify-between">
         <div className="flex flex-row items-center gap-1">
@@ -37,7 +40,7 @@ const CategoryItem = ({ deleteModal }: Props) => {
               fill="#8F92A1"
             />
           </svg>
-          <p className="text-xs text-[#9CA3AF]">21</p>
+          <p className="text-xs text-[#9CA3AF]">{data.countOfMovies}</p>
         </div>
 
         <div className="flex flex-row gap-4">
@@ -49,6 +52,7 @@ const CategoryItem = ({ deleteModal }: Props) => {
             viewBox="0 0 16 16"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            onClick={onEdit}
           >
             <path
               fillRule="evenodd"
