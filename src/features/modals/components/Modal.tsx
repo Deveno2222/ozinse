@@ -6,11 +6,17 @@ import { ReactNode, useEffect } from "react";
 interface Props {
   children: ReactNode;
   title: string;
+  onClose?: () => void;
 }
 
-const Modal = ({ children, title }: Props) => {
+const Modal = ({ children, title, onClose }: Props) => {
   const dispatch = useDispatch();
   const { isOpen, modalType } = useSelector((state: RootState) => state.modal);
+
+  const handleClose = () => {
+    dispatch(closeModal())
+    if (onClose) onClose();
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -36,7 +42,7 @@ const Modal = ({ children, title }: Props) => {
 
   return (
     <div
-      onClick={() => dispatch(closeModal())}
+      onClick={handleClose}
       className={`fixed inset-0 z-50 flex items-center justify-center transition-colors ${
         isOpen ? "visible bg-dark/50  " : "invisible"
       }`}
@@ -55,7 +61,7 @@ const Modal = ({ children, title }: Props) => {
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            onClick={() => dispatch(closeModal())}
+            onClick={handleClose}
             className="cursor-pointer transition duration-200 hover:fill-[#4e5053] hover:fill-opacity-100"
           >
             <path
