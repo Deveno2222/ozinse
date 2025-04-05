@@ -1,8 +1,8 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface ImageUploadProps {
-  value?: File | File[] | null;
+  value?: File | File[] | string | string[] | null;
   onChange: (file: File | File[] | null) => void;
   isMultiple?: boolean;
 }
@@ -12,32 +12,63 @@ const ImageUpload = ({
   onChange,
   isMultiple = false,
 }: ImageUploadProps) => {
-  const [previews, setPreviews] = useState<string[]>(() =>
-    Array.isArray(value)
-      ? value.map((file) => URL.createObjectURL(file))
-      : value
-      ? [URL.createObjectURL(value)]
-      : []
-  );
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    const newPreviews: string[] = [];
+
+    if (value) {
+      if (Array.isArray(value)) {
+        value.forEach(file => {
+          if (file instanceof File) {
+            newPreviews.push(URL.createObjectURL(file));
+          } else if (typeof file === "string") {
+            newPreviews.push(file);
+          }
+        });
+      } else if (value instanceof File) {
+        newPreviews.push(URL.createObjectURL(value));
+      } else if (typeof value === "string") {
+        newPreviews.push(value);
+      }
+    }
+
+    setPreviews(newPreviews);
+
+    return () => {
+      newPreviews.forEach(preview => {
+        if (!preview.startsWith("http")) URL.revokeObjectURL(preview);
+      });
+    };
+  }, [value]);
 
   const handleUploadPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
-    if (files.length > 0) {
-      const newPreviews = files.map((file) => URL.createObjectURL(file));
-      if (isMultiple) {
-        setPreviews((prev) => [...prev, ...newPreviews]);
-        onChange([...(Array.isArray(value) ? value : []), ...files]);
-      } else {
-        setPreviews(newPreviews);
-        onChange(files[0]);
-      }
+    if (!files.length) return;
+
+    const validFiles = files.filter(file => file instanceof File);
+    const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+
+    if (isMultiple) {
+      setPreviews(prev => [...prev, ...newPreviews]);
+      onChange([...(Array.isArray(value) ? value : []), ...validFiles]);
+    } else {
+      setPreviews(newPreviews);
+      onChange(validFiles[0]);
     }
   };
 
   const removePicture = (index: number) => {
+    if (!previews[index]) return;
+
+    if (!previews[index].startsWith("http")) {
+      URL.revokeObjectURL(previews[index]);
+    }
+
     if (isMultiple && Array.isArray(value)) {
+      const updatedPreviews = previews.filter((_, i) => i !== index);
       const updatedFiles = value.filter((_, i) => i !== index);
-      setPreviews(previews.filter((_, i) => i !== index));
+      setPreviews(updatedPreviews);
       onChange(updatedFiles.length > 0 ? updatedFiles : null);
     } else {
       setPreviews([]);
@@ -47,23 +78,49 @@ const ImageUpload = ({
 
   return (
     <div className="flex flex-col items-center gap-4 w-full">
-      {previews.length > 0 && !isMultiple ? (
-        <div className="relative w-full max-w-md">
-          <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden">
-            <img
-              src={previews[0]}
-              className="w-full h-full object-cover"
-              alt="Preview"
-            />
-            <button
-              type="button"
-              onClick={() => removePicture(0)}
-              className="p-2 bg-[#FFFFFF66] rounded-2xl absolute top-2 right-2 hover:bg-white transition-colors"
-            >
-              <Trash2 size={20} className="text-[#171717CC]" />
-            </button>
-          </div>
-        </div>
+      {previews.length > 0 ? (
+        <>
+          {!isMultiple ? (
+            <div className="relative w-full max-w-md">
+              <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden">
+                <img
+                  src={previews[0]}
+                  className="w-full h-full object-cover"
+                  alt="Preview"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePicture(0)}
+                  className="p-2 bg-[#FFFFFF66] rounded-2xl absolute top-2 right-2 hover:bg-white transition-colors"
+                >
+                  <Trash2 size={20} className="text-[#171717CC]" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {previews.map((preview, index) => (
+                <div
+                  key={index}
+                  className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden group"
+                >
+                  <img
+                    src={preview}
+                    className="w-full h-full object-cover"
+                    alt={`Preview ${index + 1}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removePicture(index)}
+                    className="p-2 bg-[#FFFFFF66] rounded-2xl absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 size={16} className="text-[#171717CC]" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       ) : (
         <label className="flex flex-col gap-3 justify-center items-center h-48 w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-blue-500 transition-colors">
           <div className="bg-grayLine p-3 rounded-2xl">
@@ -89,30 +146,7 @@ const ImageUpload = ({
           />
         </label>
       )}
-
-      {isMultiple && previews.length > 0 && (
-        <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {previews.map((preview, index) => (
-            <div
-              key={index}
-              className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden"
-            >
-              <img
-                src={preview}
-                className="w-full h-full object-cover"
-                alt={`Preview ${index + 1}`}
-              />
-              <button
-                type="button"
-                onClick={() => removePicture(index)}
-                className="p-2 bg-[#FFFFFF66] rounded-2xl absolute top-1 right-1 hover:bg-white transition-colors"
-              >
-                <Trash2 size={16} className="text-[#171717CC]" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      
     </div>
   );
 };
