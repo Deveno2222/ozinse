@@ -1,14 +1,41 @@
-import avatar from "./../../../assets/AgeAvatar.png";
+import { useEffect, useState } from "react";
+import { IAge } from "../types";
+import { useLazyGetImageQuery } from "@/features/genre/api/genreApi";
 
 interface Props {
   openModal: () => void;
+  onEdit: () => void;
+  data: IAge;
 }
 
-const AgeCard = ({ openModal }: Props) => {
+const AgeCard = ({ openModal, onEdit, data }: Props) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [fetchImage] = useLazyGetImageQuery();
+
+  useEffect(() => {
+    if (!data.imageSrc) return;
+
+    const imageSrc =
+      typeof data.imageSrc === "string"
+        ? data.imageSrc
+        : URL.createObjectURL(data.imageSrc);
+
+    fetchImage(imageSrc)
+      .unwrap()
+      .then((blob) => {
+        setImageUrl(URL.createObjectURL(blob));
+      })
+      .catch(() => setImageUrl("/default-image.jpg"));
+
+    if (typeof data.imageSrc !== "string") {
+      return () => URL.revokeObjectURL(imageSrc);
+    }
+  }, [data.imageSrc]);
+
   return (
     <div className="flex flex-col gap-4 bg-white rounded-2xl p-4 max-w-[260px]">
-      <img src={avatar} alt="Аватар" width={228} height={140} />
-      <h3 className="text-base font-bold">8-10 жас</h3>
+      <img src={imageUrl ?? ""} alt="Аватар" width={228} height={140} />
+      <h3 className="text-base font-bold">{data.name} жас</h3>
       <div className="flex flex-row justify-between items-center">
         <div className="flex flex-row items-center gap-1">
           <svg
@@ -25,7 +52,7 @@ const AgeCard = ({ openModal }: Props) => {
               fill="#8F92A1"
             />
           </svg>
-          <p className="text-xs text-[#9CA3AF]">21</p>
+          <p className="text-xs text-[#9CA3AF]">{data.countOfMovies}</p>
         </div>
 
         <div className="flex flex-row gap-4">
@@ -37,6 +64,7 @@ const AgeCard = ({ openModal }: Props) => {
             viewBox="0 0 16 16"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            onClick={onEdit}
           >
             <path
               fillRule="evenodd"

@@ -1,5 +1,6 @@
 export interface IAge {
-    name: string;
-    image: File | null;
-  }
-  
+  ageCategoryId: number;
+  name: string;
+  countOfMovies: number;
+  imageSrc: File | null;
+}
