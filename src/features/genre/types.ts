@@ -1,4 +1,6 @@
 export interface IGenre {
+  genreId: number;
   name: string;
-  image: File | null;
+  imageSrc: File | null;
+  countOfMovies: number;
 }

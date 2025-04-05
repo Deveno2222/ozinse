@@ -1,17 +1,25 @@
 import CustomButton from "@/components/CustomButton";
 import CustomInput from "@/components/CustomInput";
 import { Button } from "@/components/ui/button";
+import {
+  useCreateGenreMutation,
+  useDeleteGenreMutation,
+  useEditGenreMutation,
+  useGetGenresQuery,
+} from "@/features/genre/api/genreApi";
 import GenreCard from "@/features/genre/components/GenreCard";
 import { IGenre } from "@/features/genre/types";
 import Modal from "@/features/modals/components/Modal";
 import { closeModal, openModal } from "@/features/modals/modalSlice";
 import AddButton from "@/features/movies/ui/AddButton";
-import ImageUpload from "@/features/movies/ui/ImageUpload";
+import ImageUploader from "@/features/movies/ui/ImageUploader";
 import { RootState } from "@/store/store";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 
 const GenresScreen = () => {
+  const [selectedGenre, setSelectedGenre] = useState<IGenre | null>(null);
   const { modalType } = useSelector((state: RootState) => state.modal);
   const dispatch = useDispatch();
 
@@ -20,49 +28,94 @@ const GenresScreen = () => {
     handleSubmit,
     reset,
     formState: { errors, isValid },
-  } = useForm<IGenre>({ mode: "onSubmit" });
+  } = useForm<Partial<IGenre>>({ mode: "onSubmit" });
 
-  const handleOpen = (type: "delete" | "form" | null) => {
+  const { data: genresData, isLoading, isError } = useGetGenresQuery();
+  const [deleteGenre] = useDeleteGenreMutation();
+  const [editGenre] = useEditGenreMutation();
+  const [createGenre] = useCreateGenreMutation();
+
+  const handleOpen = (type: "delete" | "form" | null, genre?: IGenre) => {
+    if (genre) {
+      setSelectedGenre(genre);
+      reset(genre);
+    } else {
+      setSelectedGenre(null);
+      reset({});
+    }
+
     dispatch(openModal({ modalType: type }));
   };
 
   const handleClose = () => {
     dispatch(closeModal());
-    reset();
+    setSelectedGenre(null);
+    reset({});
   };
 
-  const handleDelete = () => {
-    console.log("Логика удаления");
-    reset();
-    dispatch(closeModal());
+  const handleDelete = async () => {
+    if (!selectedGenre) return;
+    try {
+      await deleteGenre(selectedGenre.genreId).unwrap();
+      console.log("deleted genre", selectedGenre.genreId);
+    } catch (error) {
+      console.error("Error deleting genre:", error);
+    }
+    handleClose();
   };
 
-  const submitForm = (e: IGenre) => {
-    console.log(e);
-    reset();
-    dispatch(closeModal());
+  const submitForm = async (e: Partial<IGenre>) => {
+    const formData = new FormData();
+
+    formData.append("name", e.name || "");
+    if (e.imageSrc instanceof File) {
+      formData.append("image", e.imageSrc);
+    }
+
+    formData.forEach((value, key) => {
+      console.log(key, value);
+    });
+
+    try {
+      if (selectedGenre) {
+        await editGenre({
+          body: formData,
+          id: selectedGenre.genreId,
+        }).unwrap();
+        console.log("edited genre", e, selectedGenre.genreId);
+      } else {
+        await createGenre(formData).unwrap();
+        console.log("created genre", e);
+      }
+      handleClose();
+    } catch (error) {
+      console.error("Error creating/editing genre:", error);
+    }
   };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error...</div>;
 
   return (
     <div className="min-h-screen bg-[#8F92A10D] rounded-tl-3xl py-10 px-12 overflow-hidden">
       <div className="flex justify-between mb-[30px]">
         <div className="flex items-baseline gap-2">
           <h2 className="text-dark text-[22px] font-bold">Жанры</h2>
-          <span className="text-[#171717CC] text-sm font-bold">9</span>
+          <span className="text-[#171717CC] text-sm font-bold">
+            {genresData?.length}
+          </span>
         </div>
         <AddButton onClick={() => handleOpen("form")}>Добавить</AddButton>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
-        <GenreCard openModal={() => handleOpen("delete")} />
+        {genresData?.map((genre) => (
+          <GenreCard
+            key={genre.genreId}
+            data={genre}
+            openModal={() => handleOpen("delete", genre)}
+            onEdit={() => handleOpen("form", genre)}
+          />
+        ))}
       </div>
 
       {/* Модалки */}
@@ -91,7 +144,10 @@ const GenresScreen = () => {
         </Modal>
       )}
       {modalType == "form" && (
-        <Modal title={"Добавить жанр"}>
+        <Modal
+          title={selectedGenre ? "Редактировать жанр" : "Добавить жанр"}
+          onClose={handleClose}
+        >
           <form onSubmit={handleSubmit(submitForm)}>
             <div className="flex flex-col gap-4 p-8">
               <Controller
@@ -109,13 +165,15 @@ const GenresScreen = () => {
               />
 
               <Controller
-                name="image"
+                name="imageSrc"
                 control={control}
                 rules={{ required: "Выберите изображение" }}
                 render={({ field }) => (
-                  <ImageUpload
-                    value={field.value ? field.value : null}
-                    onChange={(file) => field.onChange(file ? [file] : null)}
+                  <ImageUploader
+                    value={field.value}
+                    onChange={(file) => {
+                      field.onChange(file);
+                    }}
                   />
                 )}
               />

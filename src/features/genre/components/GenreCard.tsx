@@ -1,14 +1,39 @@
-import avatar from "./../../../assets/Avatar.png";
+import { useEffect, useState } from "react";
+import { IGenre } from "../types";
+import { useLazyGetImageQuery } from "../api/genreApi";
 
 interface Props {
   openModal: () => void;
+  onEdit: () => void;
+  data: IGenre;
 }
 
-const GenreCard = ({ openModal }: Props) => {
+const GenreCard = ({ openModal, data, onEdit }: Props) => {
+  const [imageUrl, setImageUrl] = useState("");
+  const [fetchImage] = useLazyGetImageQuery();
+
+  useEffect(() => {
+    if (!data.imageSrc) return;
+  
+    fetchImage(typeof data.imageSrc === "string" ? data.imageSrc : URL.createObjectURL(data.imageSrc))
+      .unwrap()
+      .then(blob => setImageUrl(URL.createObjectURL(blob)))
+      .catch(() => setImageUrl("/default-image.jpg"));
+  
+    return () => {
+      if (imageUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [data.imageSrc]);
+
   return (
     <div className="flex flex-col gap-4 bg-white rounded-2xl p-4 max-w-[260px]">
-      <img src={avatar} alt="Аватар" width={228} height={140} />
-      <h3 className="text-base font-bold">Комедиялар</h3>
+      {data.imageSrc && (
+        <img src={imageUrl} alt="Аватар" width={228} height={140} />
+      )}
+
+      <h3 className="text-base font-bold">{data.name}</h3>
       <div className="flex flex-row justify-between items-center">
         <div className="flex flex-row items-center gap-1">
           <svg
@@ -25,7 +50,7 @@ const GenreCard = ({ openModal }: Props) => {
               fill="#8F92A1"
             />
           </svg>
-          <p className="text-xs text-[#9CA3AF]">21</p>
+          <p className="text-xs text-[#9CA3AF]">{data.countOfMovies}</p>
         </div>
 
         <div className="flex flex-row gap-4">
@@ -37,6 +62,7 @@ const GenreCard = ({ openModal }: Props) => {
             viewBox="0 0 16 16"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            onClick={onEdit}
           >
             <path
               fillRule="evenodd"
