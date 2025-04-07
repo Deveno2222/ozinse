@@ -42,7 +42,7 @@ const router = createBrowserRouter([
 
     children: [
       { path: "/project", element: <MainScreen /> },
-      { path: "/project/movie", element: <MovieScreen /> }, // ./movie/:id - future
+      { path: "/project/movie/:id", element: <MovieScreen /> }, // ./movie/:id - future
       { path: "/project/add", element: <MovieAdd /> },
       { path: "/project/search", element: <ProjectSearch /> },
       { path: "/project/edit", element: <EditScreen /> },

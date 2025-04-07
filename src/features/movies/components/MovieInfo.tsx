@@ -1,15 +1,19 @@
-import DeleteModal from "../../modals/components/DeleteModal";
 import imagePrev from "../../../assets/PreviewImage.png";
 import playBtn from "../../../assets/Play Button.png";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, Share, Star, Trash2 } from "lucide-react";
-import { useState } from "react";
 import SeasonSeriesGroup from "./SeasonSeriesGroup";
 import Modal from "@/features/modals/components/Modal";
 import { useDispatch } from "react-redux";
 import { closeModal, openModal } from "@/features/modals/modalSlice";
+import { IMovieInfo } from "../types";
+import MovieScreenshots from "./MovieScreenshots";
 
-const MovieInfo = () => {
+interface Props {
+  movieData: IMovieInfo;
+}
+
+const MovieInfo = ({ movieData }: Props) => {
   const dispatch = useDispatch();
 
   const handleOpen = (type: "delete" | "form" | null) => {
@@ -29,14 +33,14 @@ const MovieInfo = () => {
     <div className="bg-background rounded-2xl mx-6">
       <div className="flex justify-between items-start p-8">
         <div className="flex flex-col gap-2">
-          <h2 className="text-[22px] font-bold">Суперкөлік Самұрық</h2>
+          <h2 className="text-[22px] font-bold">{movieData.title}</h2>
           {/* Статистика*/}
           <div className="flex gap-4 items-center">
             <div className="flex items-center gap-2">
               {/* Количество просмотров */}
               <EyeIcon size={16} color="#8F92A1" />
               <span className="text-[#8F92A1] hover:underline cursor-default">
-                10 329
+                {movieData.views}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -108,23 +112,16 @@ const MovieInfo = () => {
           Описание
         </h3>
         <p className="text-base text-dark font-normal pb-[28px] tracking-[-0.4px]">
-          Шытырман оқиғалы мультсериал Елбасының «Ұлы даланың жеті қыры»
-          бағдарламасы аясында жүзеге асырылған. Мақалада қызғалдақтардың отаны
-          Қазақстан екені айтылады. Ал, жоба қызғалдақтардың отаны – Алатау
-          баурайы екенін анимация тілінде дәлелдей түседі. If you want to
-          increase your knowledge of 3D design with Aarón, you can also take
-          some of his other courses: Characters in Cinema 4D: from the Sketch to
-          3D Printing, Prototypes and Product Viewing in Cinema 4D, Compositions
-          with Cinema 4D and OctaneRender, 3D Illustration with 4D Cinema 4D.
+          {movieData.description}
         </p>
         <div>
           <div className="flex items-center flex-row gap-[38px]">
             <div className="text-[#8F92A1]">Режиссер:</div>
-            <div className="text-base">Бақдәулет Әлімбеков</div>
+            <div className="text-base">{movieData.director}</div>
           </div>
           <div className="flex items-center flex-row gap-[35px]">
             <div className="text-[#8F92A1]">Продюсер:</div>
-            <div className="text-base">Сандуғаш Кенжебаева</div>
+            <div className="text-base">{movieData.producer}</div>
           </div>
         </div>
       </div>
@@ -132,12 +129,9 @@ const MovieInfo = () => {
       {/* Скриншоты */}
       <div className="pt-[30px] pb-8 px-8">
         <h3 className="text-[22px] font-bold tracking-[-0.4px]">Скриншоты</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-          {[...Array(8)].map((_, index) => (
-            <div
-              key={index}
-              className="bg-[#8F92A133] rounded-lg w-full aspect-[16/9]"
-            ></div>
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mt-8">
+          {movieData.screenshots?.map((url) => (
+            <MovieScreenshots key={String(url)} imgUrl={url} />
           ))}
         </div>
       </div>

@@ -9,7 +9,7 @@ export const api = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Profile", "Category", "Genre", "AgeCategory", "Image"],
+  tagTypes: ["Profile", "Category", "Genre", "AgeCategory", "Image", "Movies"],
   endpoints: () => ({}),
 });
 

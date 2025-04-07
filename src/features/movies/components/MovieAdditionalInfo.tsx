@@ -1,6 +1,40 @@
+import { formatDate } from "@/utils/formatDate";
 import imgInfo from "../../../assets/AdditionalImage.png";
+import { IMovieInfo } from "../types";
+import { useEffect, useState } from "react";
+import { useLazyGetImageQuery } from "@/features/genre/api/genreApi";
 
-const MovieAdditionalInfo = () => {
+interface Props {
+  movieData: IMovieInfo;
+}
+
+const MovieAdditionalInfo = ({ movieData }: Props) => {
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [fetchImage] = useLazyGetImageQuery();
+
+  useEffect(() => {
+    if (!movieData.imageSrc) return;
+
+    const objectUrl =
+      typeof movieData.imageSrc === "string"
+        ? movieData.imageSrc
+        : URL.createObjectURL(movieData.imageSrc);
+
+    fetchImage(objectUrl)
+      .unwrap()
+      .then((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        setImageUrl(blobUrl);
+      })
+      .catch(() => setImageUrl(imgInfo));
+
+    return () => {
+      if (objectUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [movieData.imageSrc]);
+
   return (
     <div className="w-[254px] hidden lg:block">
       <div className="pb-[33px] border-b border-b-slayer">
@@ -21,7 +55,7 @@ const MovieAdditionalInfo = () => {
                 fill="#171717"
               />
             </svg>
-            <span>2020 год</span>
+            <span>{movieData.releaseYear} год</span>
           </div>
           {/* Жанр */}
           <div className="flex items-center gap-3 tracking-[-0.4px]">
@@ -39,7 +73,7 @@ const MovieAdditionalInfo = () => {
                 fill="#171717"
               />
             </svg>
-            <span>Телехикая, Мультсериал</span>
+            <p>{movieData.categories.map((c) => c.name).join(", ")}</p>
           </div>
           {/* Количество серий сезонов */}
           <div className="flex items-center gap-3 tracking-[-0.4px]">
@@ -57,22 +91,27 @@ const MovieAdditionalInfo = () => {
                 fill="#171717"
               />
             </svg>
-            <span>2 сезона, 10 серии, 7 мин</span>
+            <span>
+              {movieData.series.seasonCount} сезон,{" "}
+              {movieData.series.series.length} серия, {movieData.duration} мин
+            </span>
           </div>
         </div>
         <div className="mt-6">
-          <img src={imgInfo} alt="Фильм" />
+          <img src={imageUrl} className="max-h-[220px] max-w-[150px] rounded-2xl" alt="Фильм" />
         </div>
       </div>
       <div className="flex flex-col gap-2 mt-8 tracking-[-0.4px]">
         <p className="text-[#9CA3AF]">
-          Добавил: <span className="text-dark">Админ</span>
+          Добавил: <span className="text-dark">{movieData.createdBy}</span>
         </p>
         <p className="text-[#9CA3AF]">
-          Дата добавления: <span className="text-dark">4.04.2021, в 21:30</span>
+          Дата добавления:{" "}
+          <span className="text-dark">{formatDate(movieData.createdAt)}</span>
         </p>
         <p className="text-[#9CA3AF]">
-          Дата обновления: <span className="text-dark">4.04.2021, в 21:30</span>
+          Дата обновления:{" "}
+          <span className="text-dark">{formatDate(movieData.updatedAt)}</span>
         </p>
       </div>
     </div>

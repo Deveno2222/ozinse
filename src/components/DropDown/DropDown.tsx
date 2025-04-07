@@ -7,9 +7,10 @@ interface Props {
   buttonText: string;
   content: string[];
   label: string;
+  onChange: (val: string) => void;
 }
 
-const DropDown = ({ buttonText, content, label }: Props) => {
+const DropDown = ({ buttonText, content, label, onChange }: Props) => {
   const [isOpen, setOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -20,7 +21,8 @@ const DropDown = ({ buttonText, content, label }: Props) => {
 
   const handleItemClick = (item: string) => {
     setSelectedItem(item);
-    setOpen(false); // Закрываем выпадающий список после выбора
+    onChange(item)
+    setOpen(false);
   };
 
   useEffect(() => {
@@ -42,8 +44,8 @@ const DropDown = ({ buttonText, content, label }: Props) => {
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <DropDownButton isOpen={isOpen} toggle={toggleBtn}>
-        <span className="text-[#8F92A1] font-medium">{label}:</span>
-        <span className="text-dark font-bold">
+        <span className="text-[#8F92A1] font-medium text-sm">{label}:</span>
+        <span className="text-dark font-bold text-sm">
           {selectedItem || content[0]}
         </span>
       </DropDownButton>

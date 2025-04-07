@@ -5,10 +5,11 @@ import DropDownItem from "./DropDownItem";
 
 interface Props {
   buttonText: string;
-  content: string[];
+  content: string[] | number[];
+  onChange: (val: string) => void;
 }
 
-const DropDownWithIcon = ({ buttonText, content }: Props) => {
+const DropDownWithIcon = ({ buttonText, content, onChange }: Props) => {
   const [isOpen, setOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -17,9 +18,10 @@ const DropDownWithIcon = ({ buttonText, content }: Props) => {
     setOpen((prev) => !prev);
   };
 
-  const handleItemClick = (item: string) => {
-    setSelectedItem(item);
-    setOpen(false); // Закрываем выпадающий список после выбора
+  const handleItemClick = (item: string | number) => {
+    setSelectedItem(item.toString());
+    onChange(item.toString());
+    setOpen(false);
   };
 
   useEffect(() => {
@@ -63,12 +65,14 @@ const DropDownWithIcon = ({ buttonText, content }: Props) => {
           </span>
         </div>
       </DropDownButton>
-      <DropDownContent isOpen={isOpen} >
-        {content.map((item, index) => (
-          <DropDownItem key={index} onClick={() => handleItemClick(item)}>
-            {item}
-          </DropDownItem>
-        ))}
+      <DropDownContent isOpen={isOpen}>
+        <div className="overflow-y-auto max-h-44">
+          {content.map((item, index) => (
+            <DropDownItem key={index} onClick={() => handleItemClick(item)}>
+              {item}
+            </DropDownItem>
+          ))}
+        </div>
       </DropDownContent>
     </div>
   );

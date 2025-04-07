@@ -1,70 +1,88 @@
 import DropDown from "@/components/DropDown/DropDown";
 import DropDownWithIcon from "@/components/DropDown/DropDownWithIcon";
+import { useGetAgesQuery } from "@/features/age/api/ageApi";
+import { useGetCategoriesQuery } from "@/features/categories/api/categoryApi";
+import { useGetGenresQuery } from "@/features/genre/api/genreApi";
 
-const items = ["Option 1", "Option 2", "Option 3sdad"];
+interface Props {
+  handleChanges: (filterName: string, value: string) => void;
+}
 
-const FilterBar = () => {
+const FilterBar = ({ handleChanges }: Props) => {
+  // const {
+  //   data: age,
+  //   isLoading: isAgesLoading,
+  //   isError: isAgesError
+  // } = useGetAgesQuery();
+
+  const {
+    data: genre,
+    isLoading: isGenresLoading,
+    isError: isGenresError,
+  } = useGetGenresQuery();
+
+  const {
+    data: category,
+    isLoading: isCategoriesLoading,
+    isError: isCategoriesError,
+  } = useGetCategoriesQuery();
+
+  const mockSortFilter = [
+    { "1": "Популярные" },
+    { "2": "Новинки" },
+    { "3": "Все" },
+  ];
+  const categories = [
+    "Все категории",
+    ...(category ? category.map((item) => item.name) : []),
+  ];
+  const types = [
+    "Фильмы и сериалы",
+    ...(genre ? genre.map((item) => item.name) : []),
+  ];
+  const years = [
+    ...Array.from(
+      { length: new Date().getFullYear() - 1970 + 1 },
+      (_, i) => 1970 + i
+    ).sort((a, b) => b - a),
+  ];
+
+  if (isGenresLoading || isCategoriesLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (isGenresError || isCategoriesError) {
+    return <div>Error loading filter options</div>;
+  }
+
   return (
     <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-0 mb-10">
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 items-center gap-4">
-        <DropDown label="Сортировать" buttonText="Click" content={items} />
-        <DropDown label="Сортировать" buttonText="Click" content={items} />
-        <DropDown label="Сортировать" buttonText="Click" content={items} />
+        <DropDown
+          label="Сортировать"
+          buttonText="Click"
+          content={mockSortFilter}
+          filterName="sortBy"
+          onChange={handleChanges}
+        />
+        <DropDown
+          label="Категория"
+          buttonText="Click"
+          content={categories}
+          filterName="category"
+          onChange={handleChanges}
+        />
+        <DropDown
+          label="Тип"
+          buttonText="Click"
+          content={types}
+          filterName="sort"
+          onChange={handleChanges}
+        />
       </div>
 
-      <DropDownWithIcon buttonText="Выберите год" content={["2021", "2022", "2023"]}/>
+      <DropDownWithIcon buttonText="Выберите год" content={years} />
     </div>
-
-    // <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-0 mb-10">
-    //   <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 items-center gap-4">
-    //     {/* Сортировка */}
-    //     <DropDownItem
-    //       triggerLabel="Сортировать"
-    //       items={[
-    //         { label: "Популярные", value: "popular" },
-    //         { label: "По рейтингу", value: "rating" },
-    //         { label: "Новинки", value: "new" },
-    //       ]}
-    //     />
-
-    //     {/* Категории */}
-    //     <DropDownItem
-    //       triggerLabel="Категория"
-    //       items={[
-    //         { label: "Все категории", value: "all" },
-    //         { label: "Боевики", value: "action" },
-    //         { label: "Комедии", value: "comedy" },
-    //       ]}
-    //     />
-
-    //     {/* Тип */}
-    //     <DropDownItem
-    //       triggerLabel="Тип"
-    //       items={[
-    //         { label: "Фильмы и сериалы", value: "all" },
-    //         { label: "Сериалы", value: "series" },
-    //       ]}
-    //     />
-    //   </div>
-
-    //   {/* Правый блок (Кнопка выбора года) */}
-    //   <DropdownMenu>
-    //     <DropdownMenuTrigger asChild>
-    //       <Button
-    //         variant="default"
-    //         className="flex items-center gap-2 bg-[#8F92A10D] shadow-none text-[#B1B1B8] px-3 py-2 h-10 w-[146px] rounded-2xl hover:bg-[#EDEDEF] transition"
-    //       >
-    //         <img className="w-6 h-6" src={clock} alt="Выберите год" />
-    //         <span className="text-dark font-bold">Выберите год</span>
-    //       </Button>
-    //     </DropdownMenuTrigger>
-    //     <DropdownMenuContent className="w-40">
-    //       <DropdownMenuItem>2024</DropdownMenuItem>
-    //       <DropdownMenuItem>2023</DropdownMenuItem>
-    //       <DropdownMenuItem>2022</DropdownMenuItem>
-    //     </DropdownMenuContent>
-    //   </DropdownMenu>
-    // </div>
   );
 };
 

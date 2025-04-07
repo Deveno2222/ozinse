@@ -1,14 +1,45 @@
 import { EyeIcon, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Link } from "react-router-dom";
+import { IMovie } from "../types";
+import { useLazyGetImageQuery } from "@/features/genre/api/genreApi";
+import imgPlaceholder from "../../../assets/ImagePlaceholder.png";
 
 interface Props {
   openModal: () => void;
+  data: IMovie;
 }
 
-const MovieCard = ({ openModal }: Props) => {
+const MovieCard = ({ openModal, data }: Props) => {
   const [isActive, setActive] = useState(false);
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [fetchImage] = useLazyGetImageQuery();
+
+  useEffect(() => {
+    if (!data.imageSrc) return;
+
+    const objectUrl =
+      typeof data.imageSrc === "string"
+        ? data.imageSrc
+        : URL.createObjectURL(data.imageSrc);
+
+    fetchImage(objectUrl)
+      .unwrap()
+      .then((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        setImageUrl(blobUrl);
+      })
+      .catch(() => setImageUrl(imgPlaceholder));
+
+    // Clean up
+    return () => {
+      if (objectUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [data.imageSrc]);
 
   return (
     <div
@@ -19,45 +50,37 @@ const MovieCard = ({ openModal }: Props) => {
  flex-col rounded-2xl w-[260px] h-[460px] p-4`}
     >
       <div className="relative">
-        <img src="src\assets\Image.png" alt="Постер фильма" />
+        <img src={imageUrl ?? imgPlaceholder} alt="Постер фильма" className="min-h-[334px] rounded-2xl" />
         <div className="absolute top-3 left-3 bg-[#171717CC] text-white font-medium py-[2px] px-2 rounded-[8px] h-[28px] flex items-center justify-center">
           4 бөлім
         </div>
       </div>
       <div className="flex flex-col gap-4 py-4">
         <div className="flex flex-col gap-2">
-          <Link to={"/project/movie"}>
+          <Link to={`/project/movie/${data.movieId}`}>
             <h3
               className={`text-base ${
                 isActive ? "text-blueUsed" : "text-dark"
               } font-bold`}
             >
-              Айдар
+              {data.title}
             </h3>
           </Link>
           <div className="flex items-center gap-1">
-            <p className="text-xs text-[#9CA3AF] hover:underline cursor-pointer">
-              Телехикая
-            </p>
-            <svg
-              width="4"
-              height="4"
-              viewBox="0 0 4 4"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="2" cy="2" r="2" fill="#9CA3AF" />
-            </svg>
-            <p className="text-xs text-[#9CA3AF] hover:underline cursor-pointer">
-              Мультфильм
-            </p>
+            {data.categories.length > 0 && (
+              <p className="text-xs text-[#9CA3AF] hover:underline cursor-pointer">
+                {data.categories.map((c) => c.name).join(" • ")}
+              </p>
+            )}
           </div>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex flex-row gap-1 items-center">
             <EyeIcon color="#8F92A1" size={16} />
-            <span className="font-normal text-xs text-[#8F92A1]">15 201</span>
+            <span className="font-normal text-xs text-[#8F92A1]">
+              {data.views}
+            </span>
           </div>
           <div className="flex gap-4">
             <Link to={"/project/edit"}>
