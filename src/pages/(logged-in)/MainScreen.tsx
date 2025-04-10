@@ -130,7 +130,9 @@ const MainScreen = () => {
       <div className="flex justify-between mb-[30px]">
         <div className="flex items-baseline gap-2">
           <h2 className="text-dark text-[22px] font-bold">Проекты</h2>
-          <span className="text-[#171717CC] text-sm font-bold">112</span>
+          <span className="text-[#171717CC] text-sm font-bold">
+            {movies?.length}
+          </span>
         </div>
         <Link to={"/project/add"}>
           <AddButton>Добавить</AddButton>

@@ -1,5 +1,5 @@
 import imagePrev from "../../../assets/PreviewImage.png";
-import playBtn from "../../../assets/Play Button.png";
+import PlayBtn from "../../../assets/PlayBtn.svg";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, Share, Star, Trash2 } from "lucide-react";
 import SeasonSeriesGroup from "./SeasonSeriesGroup";
@@ -8,6 +8,8 @@ import { useDispatch } from "react-redux";
 import { closeModal, openModal } from "@/features/modals/modalSlice";
 import { IMovieInfo } from "../types";
 import MovieScreenshots from "./MovieScreenshots";
+import { useState } from "react";
+import ReactPlayer from "react-player";
 
 interface Props {
   movieData: IMovieInfo;
@@ -15,6 +17,10 @@ interface Props {
 
 const MovieInfo = ({ movieData }: Props) => {
   const dispatch = useDispatch();
+
+  const [activeVideo, setActiveVideo] = useState<string>(
+    movieData.series.series[0].videoLink
+  );
 
   const handleOpen = (type: "delete" | "form" | null) => {
     dispatch(openModal({ modalType: type }));
@@ -28,6 +34,20 @@ const MovieInfo = ({ movieData }: Props) => {
     console.log("Логика удаления");
     dispatch(closeModal());
   };
+
+  const PlayIcon = () => (
+    <div className="flex items-center justify-center w-20 h-20 bg-[#7E2DFC] bg-opacity-75 rounded-full">
+      <svg
+        width="32"
+        height="32"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path d="M8 5V19L19 12L8 5Z" fill="#fff" />
+      </svg>
+    </div>
+  );
 
   return (
     <div className="bg-background rounded-2xl mx-6">
@@ -95,16 +115,24 @@ const MovieInfo = ({ movieData }: Props) => {
       </div>
       {/* Видео */}
       <div className="relative px-8 w-full">
-        <img src={imagePrev} alt="Фильм" className="w-full" />
-        <img
-          className="absolute top-1/2 left-1/2 w-[80px] h-[80px] -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full"
-          src={playBtn}
-          alt="Запуск"
-        />
+        <div className="rounded-2xl overflow-hidden">
+          <ReactPlayer
+            light
+            width={760}
+            height={428}
+            url={activeVideo}
+            playIcon={<PlayIcon />}
+            controls
+          />
+        </div>
       </div>
+      {/* <VideoPlayer videoId={activeVideo}/> */}
 
       {/* Серии */}
-      <SeasonSeriesGroup />
+      <SeasonSeriesGroup
+        movie={movieData.series}
+        setActiveVideoLink={setActiveVideo}
+      />
 
       {/* Описание */}
       <div className="p-8 border-b border-b-grayLine">
