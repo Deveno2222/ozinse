@@ -1,5 +1,3 @@
-import imagePrev from "../../../assets/PreviewImage.png";
-import PlayBtn from "../../../assets/PlayBtn.svg";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, Share, Star, Trash2 } from "lucide-react";
 import SeasonSeriesGroup from "./SeasonSeriesGroup";
@@ -10,6 +8,8 @@ import { IMovieInfo } from "../types";
 import MovieScreenshots from "./MovieScreenshots";
 import { useState } from "react";
 import ReactPlayer from "react-player";
+import { useNavigate, useParams } from "react-router-dom";
+import { useDeleteMovieMutation } from "../api/movieApi";
 
 interface Props {
   movieData: IMovieInfo;
@@ -17,9 +17,13 @@ interface Props {
 
 const MovieInfo = ({ movieData }: Props) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  const [deleteVideo] = useDeleteMovieMutation();
 
   const [activeVideo, setActiveVideo] = useState<string>(
-    movieData.series.series[0].videoLink
+    movieData?.series?.series?.[0]?.videoLink || ""
   );
 
   const handleOpen = (type: "delete" | "form" | null) => {
@@ -30,9 +34,15 @@ const MovieInfo = ({ movieData }: Props) => {
     dispatch(closeModal());
   };
 
-  const handleDelete = () => {
-    console.log("Логика удаления");
-    dispatch(closeModal());
+  const handleDelete = async () => {
+    try {
+      await deleteVideo(Number(id));
+      navigate("/project");
+      console.log("Проект удален");
+    } catch (error) {
+      console.error(error);
+    }
+    handleClose();
   };
 
   const PlayIcon = () => (
@@ -81,7 +91,7 @@ const MovieInfo = ({ movieData }: Props) => {
         </div>
         {/* Группа кнопок */}
         <div className="flex items-center gap-4">
-          <Button className="rounded-2xl bg-[#F3F6F8] hover:bg-[#e4e6e7] shadow-none text-dark text-base font-bold px-6 py-2">
+          <Button className="rounded-2xl bg-[#F3F6F8] hover:bg-[#e4e6e7] shadow-none text-dark text-base font-bold px-6 py-2" onClick={() => navigate(`/project/movie/${id}/edit`)}>
             Редактировать
           </Button>
           <Button
@@ -115,22 +125,29 @@ const MovieInfo = ({ movieData }: Props) => {
       </div>
       {/* Видео */}
       <div className="relative px-8 w-full">
-        <div className="rounded-2xl overflow-hidden">
-          <ReactPlayer
-            light
-            width={760}
-            height={428}
-            url={activeVideo}
-            playIcon={<PlayIcon />}
-            controls
-          />
+        <div className="rounded-2xl overflow-hidden w-full max-w-[760px] aspect-video">
+          {movieData.series.seasonCount > 0 ? (
+            <ReactPlayer
+              light
+              width="100%"
+              height="100%"
+              url={activeVideo}
+              playIcon={<PlayIcon />}
+              controls
+            />
+          ) : (
+            <div className="flex justify-center items-center w-[760px] h-[428px] bg-grayLine text-gray-500">
+              Видео еще не загружены
+            </div>
+          )}
         </div>
       </div>
       {/* <VideoPlayer videoId={activeVideo}/> */}
 
       {/* Серии */}
       <SeasonSeriesGroup
-        movie={movieData.series}
+        movieId={movieData.movieId}
+        seasonCount={movieData.series.seasonCount}
         setActiveVideoLink={setActiveVideo}
       />
 

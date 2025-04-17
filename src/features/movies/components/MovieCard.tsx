@@ -2,13 +2,13 @@ import { EyeIcon, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Link } from "react-router-dom";
-import { IMovie } from "../types";
+import { IMovieInfo } from "../types";
 import { useLazyGetImageQuery } from "@/features/genre/api/genreApi";
 import imgPlaceholder from "../../../assets/ImagePlaceholder.png";
 
 interface Props {
   openModal: () => void;
-  data: IMovie;
+  data: IMovieInfo;
 }
 
 const MovieCard = ({ openModal, data }: Props) => {
@@ -50,10 +50,16 @@ const MovieCard = ({ openModal, data }: Props) => {
  flex-col rounded-2xl w-[260px] h-[460px] p-4`}
     >
       <div className="relative">
-        <img src={imageUrl ?? imgPlaceholder} alt="Постер фильма" className="min-h-[334px] rounded-2xl" />
-        <div className="absolute top-3 left-3 bg-[#171717CC] text-white font-medium py-[2px] px-2 rounded-[8px] h-[28px] flex items-center justify-center">
-          4 бөлім
-        </div>
+        <img
+          src={imageUrl ?? imgPlaceholder}
+          alt="Постер фильма"
+          className="min-h-[334px] rounded-2xl"
+        />
+        {data.seriesCount > 0 && (
+          <div className="absolute top-3 left-3 bg-[#171717CC] text-white font-medium py-[2px] px-2 rounded-[8px] h-[28px] flex items-center justify-center">
+            {data.seriesCount} бөлім
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-4 py-4">
         <div className="flex flex-col gap-2">
@@ -83,7 +89,7 @@ const MovieCard = ({ openModal, data }: Props) => {
             </span>
           </div>
           <div className="flex gap-4">
-            <Link to={"/project/edit"}>
+            <Link to={`/project/movie/${data.movieId}/edit`}>
               <svg
                 width="16"
                 height="16"

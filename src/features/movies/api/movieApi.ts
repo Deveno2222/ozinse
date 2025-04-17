@@ -1,10 +1,17 @@
 import { api } from "@/services/api/api";
-import { IMovie, IMovieInfo } from "../types";
+import {
+  IEpisode,
+  IEpisodeFetch,
+  IMovie,
+  IMovieForm,
+  IMovieInfo,
+} from "../types";
+import { url } from "inspector";
 
 export const movieApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getMovies: builder.query<
-      IMovie[],
+      IMovieInfo[],
       {
         genre?: number;
         category?: string;
@@ -37,7 +44,8 @@ export const movieApi = api.injectEndpoints({
           params: queryParams,
         };
       },
-      transformResponse: (response: { result: IMovie[] }) => response.result,
+      transformResponse: (response: { result: IMovieInfo[] }) =>
+        response.result,
       providesTags: ["Movies"],
     }),
 
@@ -50,6 +58,16 @@ export const movieApi = api.injectEndpoints({
       providesTags: ["Movies"],
     }),
 
+    getSeason: builder.query<
+      IEpisodeFetch,
+      { movieId: number; seasonId: number }
+    >({
+      query: ({ movieId, seasonId }) =>
+        `movie/${movieId}/series?seasonId=${seasonId}`,
+      transformResponse: (response: { result: IEpisodeFetch }) =>
+        response.result,
+    }),
+
     deleteMovie: builder.mutation<void, number>({
       query: (id) => ({
         url: `/movies/${id}`,
@@ -57,7 +75,61 @@ export const movieApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Movies"],
     }),
+
+    createMovie: builder.mutation<{ result: boolean; metadata: {} }, FormData>({
+      query: (formData) => ({
+        url: "/movies",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Movies"],
+    }),
+
+    updateMovie: builder.mutation<
+      { result: boolean },
+      { movieId: number; formData: FormData }
+    >({
+      query: ({ movieId, formData }) => ({
+        url: `/movies/${movieId}`,
+        method: "PATCH",
+        body: formData,
+      }),
+      invalidatesTags: ["Movies"],
+    }),
+
+    addEpisodeVideoLink: builder.mutation<
+      void,
+      {
+        movieId: number;
+        seasonId: number;
+        seriesId: number;
+        formData: FormData;
+      }
+    >({
+      query: ({ movieId, seasonId, seriesId, formData }) => ({
+        url: `/movies/${movieId}/season/${seasonId}/series/${seriesId}/videoLink`,
+        method: "POST",
+        body: formData,
+      }),
+    }),
+
+    addImages: builder.mutation<void, { movieId: number; formData: FormData }>({
+      query: ({ movieId, formData }) => ({
+        url: `/movies/${movieId}/images`,
+        method: "POST",
+        body: formData,
+      }),
+    }),
   }),
 });
 
-export const { useGetMoviesQuery, useGetMovieByIdQuery, useDeleteMovieMutation } = movieApi;
+export const {
+  useGetMoviesQuery,
+  useGetMovieByIdQuery,
+  useDeleteMovieMutation,
+  useCreateMovieMutation,
+  useAddEpisodeVideoLinkMutation,
+  useAddImagesMutation,
+  useLazyGetSeasonQuery,
+  useUpdateMovieMutation,
+} = movieApi;

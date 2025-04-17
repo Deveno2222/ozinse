@@ -14,6 +14,8 @@ import { useDispatch } from "react-redux";
 import { closeModal, openModal } from "@/features/modals/modalSlice";
 import { Button } from "@/components/ui/button";
 import EditPagination from "./EditPagination";
+import UseProject from "@/hooks/useProject";
+import ImageUploader from "../ui/ImageUploader";
 
 type MovieFormProps = {
   movie?: IMovieForm;
@@ -25,6 +27,8 @@ const MovieForm = ({ movie }: MovieFormProps) => {
   const [videoIds, setVideoIds] = useState<Record<string, string | null>>({});
   const navigate = useNavigate();
   const isEditing = !!movie;
+
+  const { ages, categories, genres } = UseProject();
 
   const extractYouTubeVideoId = (url: string): string | null => {
     const regExp =
@@ -69,6 +73,8 @@ const MovieForm = ({ movie }: MovieFormProps) => {
     formState: { errors, isValid },
     reset,
     watch,
+    setValue,
+    getValues
   } = form;
 
   const { fields, append, remove } = useFieldArray({
@@ -94,6 +100,19 @@ const MovieForm = ({ movie }: MovieFormProps) => {
       setVideoIds(initialVideoIds);
     }
   }, [movie]);
+
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === "seasons") {
+        const currentEpisodes = getValues("episodes");
+        const filteredEpisodes = currentEpisodes.filter(
+          ep => ep.season <= value.seasons
+        );
+        setValue("episodes", filteredEpisodes);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, setValue, getValues]);
 
   // Обновление состояния при изменении episodes
   useEffect(() => {
@@ -142,7 +161,7 @@ const MovieForm = ({ movie }: MovieFormProps) => {
       <MovieTitle step={step} onBack={handleBack} isEdit={isEditing} />
       {isEditing && (
         <div className="px-8 my-8 border-b border-grayLine">
-          <EditPagination step={step} stepp={setStep}/>
+          <EditPagination step={step} stepp={setStep} />
         </div>
       )}
       <form className="px-8" onSubmit={handleSubmit(onFormSubmit)}>
@@ -172,15 +191,16 @@ const MovieForm = ({ movie }: MovieFormProps) => {
                 <CustomSelect
                   label="Выберите категорию"
                   multiple={true}
-                  options={[
-                    { value: "action", label: "Экшен" },
-                    { value: "comedy", label: "Комедия" },
-                    { value: "drama", label: "Драма" },
-                  ]}
+                  options={
+                    categories?.map((category) => ({
+                      value: category.categoryId,
+                      label: category.name,
+                    })) ?? []
+                  }
                   error={!!errors.category}
                   helperText={errors.category?.message}
                   {...field}
-                  value={Array.isArray(field.value) ? field.value : ''}
+                  value={Array.isArray(field.value) ? field.value : ""}
                 />
               )}
             />
@@ -193,10 +213,13 @@ const MovieForm = ({ movie }: MovieFormProps) => {
                 render={({ field }) => (
                   <CustomSelect
                     label="Тип проекта"
-                    options={[
-                      { value: "tvShow", label: "Сериал" },
-                      { value: "film", label: "Фильм" },
-                    ]}
+                    multiple={true}
+                    options={
+                      genres?.map((genre) => ({
+                        value: genre.genreId,
+                        label: genre.name,
+                      })) || []
+                    }
                     error={!!errors.typeProject}
                     helperText={errors.typeProject?.message}
                     {...field}
@@ -212,14 +235,18 @@ const MovieForm = ({ movie }: MovieFormProps) => {
                   <CustomSelect
                     label="Возрастная категория"
                     multiple={true}
-                    options={[
-                      { value: "childs", label: "8-10" },
-                      { value: "older", label: "10-12" },
-                    ]}
+                    options={
+                      ages
+                        ?.map((age) => ({
+                          value: age.ageCategoryId,
+                          label: age.name,
+                        }))
+                        .sort((a, b) => Number(a.label) - Number(b.label)) || []
+                    }
                     error={!!errors.age}
                     helperText={errors.age?.message}
                     {...field}
-                    value={Array.isArray(field.value) ? field.value : ''}
+                    value={Array.isArray(field.value) ? field.value : ""}
                   />
                 )}
               />
@@ -341,6 +368,19 @@ const MovieForm = ({ movie }: MovieFormProps) => {
                     error={!!errors.seasons}
                     helperText={errors.seasons?.message}
                     {...field}
+                    onChange={(newValue) => {
+                      const prevValue = getValues("seasons");
+                      const currentEpisodes = getValues("episodes");
+                      
+                      // Фильтрация перед установкой нового значения
+                      const filteredEpisodes = currentEpisodes.filter(
+                        ep => ep.season <= newValue
+                      );
+        
+                      // Полная синхронизация данных
+                      setValue("episodes", filteredEpisodes, { shouldValidate: true });
+                      field.onChange(newValue);
+                    }}
                   />
                 )}
               />
@@ -354,7 +394,7 @@ const MovieForm = ({ movie }: MovieFormProps) => {
               );
 
               return (
-                <div key={seasonNumber} className="flex flex-col">
+                <div key={seasonNumber} className="flex flex-col gap-4">
                   <h3 className="text-[22px] text-dark font-bold pb-[26px]">
                     {seasonNumber} сезон
                   </h3>
@@ -442,10 +482,16 @@ const MovieForm = ({ movie }: MovieFormProps) => {
                 control={control}
                 rules={{ required: "Добавьте изображение" }}
                 render={({ field }) => (
-                  <ImageUpload
-                    value={field.value ? field.value : null}
-                    onChange={(file) => field.onChange(file ? file : null)}
+                  <ImageUploader
+                    value={field.value}
+                    onChange={(file) => {
+                      field.onChange(file);
+                    }}
                   />
+                  // <ImageUpload
+                  //   value={field.value ? field.value : null}
+                  //   onChange={(file) => field.onChange(file ? file : null)}
+                  // />
                 )}
               />
             </div>

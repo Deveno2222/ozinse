@@ -81,16 +81,6 @@ const CategoryScreen = () => {
     } catch (error) {
       console.log(error);
     }
-
-    // try {
-    //   console.log(e);
-    //   await createCategory(e).unwrap();
-    //   console.log("Категория успешно добавлена");
-    //   reset();
-    //   dispatch(closeModal());
-    // } catch (error) {
-    //   console.log(error);
-    // }
   };
 
   if (isLoading) return <div>Loading...</div>;

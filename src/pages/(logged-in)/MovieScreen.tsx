@@ -2,13 +2,18 @@ import { useGetMovieByIdQuery } from "@/features/movies/api/movieApi";
 import MovieAdditionalInfo from "@/features/movies/components/MovieAdditionalInfo";
 import MovieBreadCrumb from "@/features/movies/components/MovieBreadCrumb";
 import MovieInfo from "@/features/movies/components/MovieInfo";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 
 const MovieScreen = () => {
   const { id } = useParams();
-  const { data, isLoading, isError } = useGetMovieByIdQuery(Number(id));
+  const { data, isLoading, isError, refetch } = useGetMovieByIdQuery(
+    Number(id)
+  );
 
-  console.log("data", data);
+  useEffect(() => {
+    refetch();
+  }, [window.location.search]);
 
   if (isLoading) {
     return <div>Loading...</div>;

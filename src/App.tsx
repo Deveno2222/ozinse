@@ -42,10 +42,10 @@ const router = createBrowserRouter([
 
     children: [
       { path: "/project", element: <MainScreen /> },
-      { path: "/project/movie/:id", element: <MovieScreen /> }, // ./movie/:id - future
+      { path: "/project/movie/:id", element: <MovieScreen /> },
       { path: "/project/add", element: <MovieAdd /> },
       { path: "/project/search", element: <ProjectSearch /> },
-      { path: "/project/edit", element: <EditScreen /> },
+      { path: "/project/movie/:id/edit", element: <MovieAdd /> },
       { path: "/main", element: <ProjectsOnMain /> },
       { path: "/category", element: <CategoryScreen /> },
       { path: "/users", element: <UsersScreen /> },

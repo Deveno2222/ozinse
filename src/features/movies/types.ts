@@ -2,10 +2,21 @@ import { IAge } from "../age/types";
 import { ICategory } from "../categories/types";
 import { IGenre } from "../genre/types";
 
-interface IEpisode {
-  id: string;
-  season: number;
-  episode: string;
+export interface IEpisode {
+  movieId: number;
+  seasonId: number;
+  seriesId: number;
+  link: string;
+}
+
+export interface IEpisodeFetch {
+  movieId: number;
+  seasonCount: number;
+  seasonId: number;
+  series: {
+    seriesId: number;
+    videoLink: string;
+  }[];
 }
 
 export interface IMovie {
@@ -33,7 +44,7 @@ export interface IMovieInfo {
   producer: string;
   releaseYear: number;
   duration: number;
-  keywords: string;
+  keyWords: string;
   isFavorite: boolean;
   series: {
     movieId: number;
@@ -51,10 +62,11 @@ export interface IMovieInfo {
 }
 
 export interface IMovieForm {
+  movieId?: number;
   name: string;
-  category: string[];
-  typeProject: string;
-  age: string[];
+  category: ICategory[];
+  typeProject: IGenre[];
+  age: IAge[];
   year: string;
   dur: string;
   keyWords: string;
@@ -64,5 +76,5 @@ export interface IMovieForm {
   seasons: number;
   episodes: IEpisode[];
   coverImage: File | null;
-  screenshots: File[] | null;
+  screenshots?: (File | string)[];
 }
