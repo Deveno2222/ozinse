@@ -14,7 +14,7 @@ const Header = () => {
     navigate("/login");
     console.log("Выход из системы");
   };
-  
+
   return (
     <div className="flex items-center h-[100px] px-5 mb-8">
       {/* Логотип и поиск */}

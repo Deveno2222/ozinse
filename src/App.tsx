@@ -23,6 +23,7 @@ import AgeScreen from "./pages/(logged-in)/AgeScreen";
 import ProjectSearch from "./pages/(logged-in)/ProjectSearch";
 import EditScreen from "./pages/(logged-in)/EditScreen";
 import AuthProvider from "./features/layout/components/AuthProvider";
+import { SearchProvider } from "./contexts/SearchContext";
 
 Modal.setAppElement("#root");
 
@@ -59,9 +60,11 @@ const router = createBrowserRouter([
 function App() {
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <RouterProvider router={router} />
-      </ThemeProvider>
+      <SearchProvider>
+        <ThemeProvider theme={theme}>
+          <RouterProvider router={router} />
+        </ThemeProvider>
+      </SearchProvider>
     </Provider>
   );
 }

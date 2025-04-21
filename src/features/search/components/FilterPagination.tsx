@@ -1,40 +1,38 @@
-import { useState } from "react";
 import FilterPaginationItem from "./FilterPaginationItem";
 
-type TPagination = {
-  type: "projects" | "categories" | "users";
-};
+type TPagination = "projects" | "categories" | "users";
 
-const FilterPagination = () => {
-  const [isActiveItem, setActiveItem] = useState<TPagination>({
-    type: "projects",
-  });
+interface Props {
+  selType: "projects" | "categories" | "users";
+  onChangeType: (type: TPagination) => void;
+}
 
+const FilterPagination = ({ selType, onChangeType }: Props) => {
   const handleActive = (val: TPagination) => {
-    setActiveItem(val);
+    onChangeType(val);
   };
 
   return (
     <div className="flex gap-8 bg-white font-bold px-12 items-center">
       <FilterPaginationItem
         title="Проекты"
-        isActive={isActiveItem.type === "projects"}
+        isActive={selType === "projects"}
         handleClick={() => {
-          handleActive({ type: "projects" });
+          handleActive("projects");
         }}
       />
       <FilterPaginationItem
         title="Категории"
-        isActive={isActiveItem.type === "categories"}
+        isActive={selType === "categories"}
         handleClick={() => {
-          handleActive({ type: "categories" });
+          handleActive("categories");
         }}
       />
       <FilterPaginationItem
         title="Пользователи"
-        isActive={isActiveItem.type === "users"}
+        isActive={selType === "users"}
         handleClick={() => {
-          handleActive({ type: "users" });
+          handleActive("users");
         }}
       />
     </div>
