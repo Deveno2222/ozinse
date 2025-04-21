@@ -10,14 +10,16 @@ import {
   useGetMoviesQuery,
 } from "@/features/movies/api/movieApi";
 import MovieCard from "@/features/movies/components/MovieCard";
-import { IMovie, IMovieInfo } from "@/features/movies/types";
+import { IMovie } from "@/features/movies/types";
 import AddButton from "@/features/movies/ui/AddButton";
+import { RootState } from "@/store/store";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
 const MainScreen = () => {
   const dispatch = useDispatch();
+  const { modalType } = useSelector((state: RootState) => state.modal);
 
   const [selectedMovie, setSelectedMovie] = useState<IMovie | null>(null);
   const [deleteMovie] = useDeleteMovieMutation();
@@ -111,7 +113,7 @@ const MainScreen = () => {
       if (!selectedMovie) return;
 
       await deleteMovie(selectedMovie.movieId);
-      console.log("Фильм удален");
+      handleClose();
     } catch (error) {
       console.error(error);
     }
@@ -177,27 +179,29 @@ const MainScreen = () => {
         ))}
       </div>
 
-      <Modal title={"Удалить проект из главной?"} onClose={handleClose}>
-        <div>
-          <p className="text-[#8F92A1] text-base text-center py-8 tracking-[-0.4px]">
-            Вы действительно хотите удалить проект из главной?
-          </p>
-          <div className="flex justify-center gap-2">
-            <Button
-              onClick={handleDelete}
-              className="bg-purpleUsed hover:bg-purpleupdated shadow-none rounded-2xl w-[134px]"
-            >
-              Да, удалить
-            </Button>
-            <Button
-              onClick={handleClose}
-              className="bg-[#8F92A11A] hover:bg-[#38383a1a] shadow-none text-dark rounded-2xl w-[134px]"
-            >
-              Отмена
-            </Button>
+      {modalType === "delete" && (
+        <Modal title={"Удалить проект?"} onClose={handleClose}>
+          <div>
+            <p className="text-[#8F92A1] text-base text-center py-8 tracking-[-0.4px]">
+              Вы действительно хотите удалить проект?
+            </p>
+            <div className="flex justify-center gap-2">
+              <Button
+                onClick={handleDelete}
+                className="bg-purpleUsed hover:bg-purpleupdated shadow-none rounded-2xl w-[134px]"
+              >
+                Да, удалить
+              </Button>
+              <Button
+                onClick={handleClose}
+                className="bg-[#8F92A11A] hover:bg-[#38383a1a] shadow-none text-dark rounded-2xl w-[134px]"
+              >
+                Отмена
+              </Button>
+            </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
+      )}
     </div>
   );
 };

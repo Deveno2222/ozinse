@@ -14,12 +14,16 @@ const GenreCard = ({ openModal, data, onEdit }: Props) => {
 
   useEffect(() => {
     if (!data.imageSrc) return;
-  
-    fetchImage(typeof data.imageSrc === "string" ? data.imageSrc : URL.createObjectURL(data.imageSrc))
+
+    fetchImage(
+      typeof data.imageSrc === "string"
+        ? data.imageSrc
+        : URL.createObjectURL(data.imageSrc)
+    )
       .unwrap()
-      .then(blob => setImageUrl(URL.createObjectURL(blob)))
+      .then((blob) => setImageUrl(URL.createObjectURL(blob)))
       .catch(() => setImageUrl("/default-image.jpg"));
-  
+
     return () => {
       if (imageUrl.startsWith("blob:")) {
         URL.revokeObjectURL(imageUrl);
@@ -30,7 +34,7 @@ const GenreCard = ({ openModal, data, onEdit }: Props) => {
   return (
     <div className="flex flex-col gap-4 bg-white rounded-2xl p-4 max-w-[260px]">
       {data.imageSrc && (
-        <img src={imageUrl} alt="Аватар" width={228} height={140} />
+        <img className="rounded-2xl overflow-hidden" src={imageUrl} alt="Аватар" width={228} height={140} />
       )}
 
       <h3 className="text-base font-bold">{data.name}</h3>

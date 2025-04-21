@@ -1,49 +1,45 @@
 import { Button } from "@/components/ui/button";
 import { EyeIcon, Share, Star, Trash2 } from "lucide-react";
 import SeasonSeriesGroup from "./SeasonSeriesGroup";
-import Modal from "@/features/modals/components/Modal";
-import { useDispatch } from "react-redux";
-import { closeModal, openModal } from "@/features/modals/modalSlice";
+
 import { IMovieInfo } from "../types";
 import MovieScreenshots from "./MovieScreenshots";
 import { useState } from "react";
 import ReactPlayer from "react-player";
 import { useNavigate, useParams } from "react-router-dom";
-import { useDeleteMovieMutation } from "../api/movieApi";
 
 interface Props {
   movieData: IMovieInfo;
+  openModal: () => void;
+  openDeleteModal: () => void;
 }
 
-const MovieInfo = ({ movieData }: Props) => {
-  const dispatch = useDispatch();
+const MovieInfo = ({ movieData, openModal, openDeleteModal }: Props) => {
   const navigate = useNavigate();
   const { id } = useParams();
-
-  const [deleteVideo] = useDeleteMovieMutation();
 
   const [activeVideo, setActiveVideo] = useState<string>(
     movieData?.series?.series?.[0]?.videoLink || ""
   );
 
-  const handleOpen = (type: "delete" | "form" | null) => {
-    dispatch(openModal({ modalType: type }));
-  };
+  // const handleOpen = (type: "delete" | "form" | null) => {
+  //   dispatch(openModal({ modalType: type }));
+  // };
 
-  const handleClose = () => {
-    dispatch(closeModal());
-  };
+  // const handleClose = () => {
+  //   dispatch(closeModal());
+  // };
 
-  const handleDelete = async () => {
-    try {
-      await deleteVideo(Number(id));
-      navigate("/project");
-      console.log("Проект удален");
-    } catch (error) {
-      console.error(error);
-    }
-    handleClose();
-  };
+  // const handleDelete = async () => {
+  //   try {
+  //     await deleteVideo(Number(id));
+  //     navigate("/project");
+  //     console.log("Проект удален");
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  //   handleClose();
+  // };
 
   const PlayIcon = () => (
     <div className="flex items-center justify-center w-20 h-20 bg-[#7E2DFC] bg-opacity-75 rounded-full">
@@ -91,36 +87,18 @@ const MovieInfo = ({ movieData }: Props) => {
         </div>
         {/* Группа кнопок */}
         <div className="flex items-center gap-4">
-          <Button className="rounded-2xl bg-[#F3F6F8] hover:bg-[#e4e6e7] shadow-none text-dark text-base font-bold px-6 py-2" onClick={() => navigate(`/project/movie/${id}/edit`)}>
+          <Button
+            className="rounded-2xl bg-[#F3F6F8] hover:bg-[#e4e6e7] shadow-none text-dark text-base font-bold px-6 py-2"
+            onClick={() => navigate(`/project/movie/${id}/edit`)}
+          >
             Редактировать
           </Button>
           <Button
-            onClick={() => handleOpen("delete")}
+            onClick={openDeleteModal}
             className="rounded-2xl bg-[#DE350B] hover:bg-[#bb2500] shadow-none w-9"
           >
             <Trash2 size={20} />
           </Button>
-          <Modal title={"Удалить проект?"}>
-            <div>
-              <p className="text-[#8F92A1] text-base text-center py-8 tracking-[-0.4px]">
-                Вы действительно хотите удаленить проект?
-              </p>
-              <div className="flex justify-center gap-2">
-                <Button
-                  onClick={handleDelete}
-                  className="bg-purpleUsed hover:bg-purpleupdated shadow-none rounded-2xl w-[134px]"
-                >
-                  Да, удалить
-                </Button>
-                <Button
-                  onClick={handleClose}
-                  className="bg-[#8F92A11A] hover:bg-[#38383a1a] shadow-none text-dark rounded-2xl w-[134px]"
-                >
-                  Отмена
-                </Button>
-              </div>
-            </div>
-          </Modal>
         </div>
       </div>
       {/* Видео */}

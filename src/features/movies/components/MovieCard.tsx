@@ -5,10 +5,11 @@ import { Link } from "react-router-dom";
 import { IMovieInfo } from "../types";
 import { useLazyGetImageQuery } from "@/features/genre/api/genreApi";
 import imgPlaceholder from "../../../assets/ImagePlaceholder.png";
+import { IMainMovie } from "@/features/search/api/searchApi";
 
 interface Props {
   openModal: () => void;
-  data: IMovieInfo;
+  data: IMovieInfo | IMainMovie;
 }
 
 const MovieCard = ({ openModal, data }: Props) => {
@@ -68,8 +69,9 @@ const MovieCard = ({ openModal, data }: Props) => {
               className={`text-base ${
                 isActive ? "text-blueUsed" : "text-dark"
               } font-bold`}
+              title={data.title}
             >
-              {data.title}
+              {data.title.length > 26 ? `${data.title.slice(0, 26)} ...` : data.title}
             </h3>
           </Link>
           <div className="flex items-center gap-1">

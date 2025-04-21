@@ -25,10 +25,7 @@ interface SeasonsInfoFormProps {
   handleBack: () => void;
 }
 
-export default function SeasonsInfoForm({
-  handleNext,
-  handleBack,
-}: SeasonsInfoFormProps) {
+export default function SeasonsInfoForm({ handleNext }: SeasonsInfoFormProps) {
   const { formData, updateFormData, isEditMode, initialData, resetForm } =
     useFormContext();
 
@@ -189,6 +186,10 @@ export default function SeasonsInfoForm({
     );
   };
 
+  const hasEmptyFields = seasons.some((season) =>
+    season.episodes.some((ep) => ep.trim() === "")
+  );
+
   const isEpisodeRemovable = (seasonIndex: number, episodeIndex: number) => {
     if (!isEditMode) return true;
 
@@ -311,13 +312,21 @@ export default function SeasonsInfoForm({
             <CustomButton
               className="w-[134px]"
               type="submit"
-              disabled={isEditMode ? !hasChanges || isLoading : isLoading}
+              disabled={
+                isEditMode
+                  ? !hasChanges || isLoading || hasEmptyFields
+                  : isLoading
+              }
             >
               {isLoading && <Loader2 className="animate-spin w-6 h-6" />}
               Сохранить
             </CustomButton>
           ) : (
-            <CustomButton className="w-[134px]" onClick={handleNext}>
+            <CustomButton
+              className="w-[134px]"
+              onClick={handleNext}
+              disabled={hasEmptyFields}
+            >
               Далее
             </CustomButton>
           )}

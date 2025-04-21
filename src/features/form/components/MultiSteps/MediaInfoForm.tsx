@@ -1,4 +1,3 @@
-// src/components/Step3Media.tsx
 import { useMemo, useState } from "react";
 import { Grid, Box, Typography } from "@mui/material";
 import { useFormContext } from "../../contexts/FormContext";
@@ -7,7 +6,6 @@ import {
   useAddImagesMutation,
   useCreateMovieMutation,
   useGetMoviesQuery,
-  useUpdateMovieMutation,
 } from "@/features/movies/api/movieApi";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -16,9 +14,11 @@ import MultipleImageUploader from "@/features/movies/ui/MultipleImageUploader";
 import CustomButton from "@/components/CustomButton";
 
 export default function MediaInfoForm({
-  handleBack,
+  openModal,
 }: {
   handleBack: () => void;
+  openModal: () => void;
+  closeModal: () => void;
 }) {
   const { formData, updateFormData, isEditMode, initialData, resetForm } =
     useFormContext();
@@ -59,18 +59,6 @@ export default function MediaInfoForm({
 
     return isCoverChanged || hasScreenshotChanges;
   }, [formData.coverImage, formData.screenshots, initialData, isEditMode]);
-
-  // const isMediaChanged = useMemo(() => {
-  //   if (!isEditMode || !initialData) return false;
-
-  //   // Всегда считаем изменением при наличии скриншотов
-  //   const hasScreenshotChanges =
-  //     (formData.screenshots?.length || 0) !==
-  //       (initialData.screenshots?.length || 0) ||
-  //     formData.screenshots?.some((f) => f instanceof File);
-
-  //   return hasScreenshotChanges;
-  // }, [formData.screenshots, initialData, isEditMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,7 +170,7 @@ export default function MediaInfoForm({
               imagesFormData.append("image", formData.coverImage);
             }
 
-            formData.screenshots?.forEach((file, index) => {
+            formData.screenshots?.forEach((file) => {
               imagesFormData.append("screenshots", file);
             });
 
@@ -197,7 +185,7 @@ export default function MediaInfoForm({
               console.log("Изображения успешно загружены");
             }
           }
-          navigate(`/project/movie/${movieId}?refresh=${Date.now()}`);
+          openModal();
         }
       }
     } catch (error) {

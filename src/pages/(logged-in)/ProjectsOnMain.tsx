@@ -1,6 +1,7 @@
 import CustomButton from "@/components/CustomButton";
 import { Button } from "@/components/ui/button";
-import MainMoviePreview from "@/features/main/components/MainMoviePreview";
+import { useGetMainMoviesQuery } from "@/features/main/api/mainMovieApi";
+
 import { IMainMovie } from "@/features/main/types";
 import Modal from "@/features/modals/components/Modal";
 import { closeModal, openModal } from "@/features/modals/modalSlice";
@@ -8,6 +9,8 @@ import AddButton from "@/features/movies/ui/AddButton";
 import ImageUpload from "@/features/movies/ui/ImageUpload";
 import CustomSelect from "@/features/movies/ui/SelectInput";
 import { RootState } from "@/store/store";
+import { Loader2 } from "lucide-react";
+
 import { Controller, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -22,10 +25,11 @@ const ProjectsOnMain = () => {
 
   // Модалка
   const dispatch = useDispatch();
-
   const { modalType } = useSelector((state: RootState) => state.modal);
 
-  const handleOpen = (type: "delete" | "form" | null) => {
+  const { data, isLoading, isError } = useGetMainMoviesQuery({});
+
+  const handleOpen = (type: "delete" | "form" | "success" | null) => {
     dispatch(openModal({ modalType: type }));
   };
 
@@ -54,14 +58,21 @@ const ProjectsOnMain = () => {
           <h2 className="text-dark text-[22px] font-bold">
             Проекты на главной
           </h2>
-          <span className="text-[#171717CC] text-sm font-bold">2</span>
+          <span className="text-[#171717CC] text-sm font-bold">
+            {data?.length | 0}
+          </span>
         </div>
         <AddButton onClick={() => handleOpen("form")}>Добавить</AddButton>
       </div>
 
       <div className="flex flex-col xl:flex-row gap-[18px]">
-        <MainMoviePreview openModalDelete={() => handleOpen("delete")} />
-        <MainMoviePreview openModalDelete={() => handleOpen("delete")} />
+        {isError && (
+          <p className="text-xl text-red-600">Ошибка при загрузке данных</p>
+        )}
+        {isLoading && <Loader2 className="animate-spin w-6 h-6"/>}
+        {data && <div>Данные</div>}
+        {/* <MainMoviePreview openModalDelete={() => handleOpen("delete")} />
+        <MainMoviePreview openModalDelete={() => handleOpen("delete")} /> */}
       </div>
       {/*  */}
       {modalType == "delete" && (
@@ -143,8 +154,20 @@ const ProjectsOnMain = () => {
               />
             </div>
             <div className="flex flex-row justify-center items-center gap-2">
-              <CustomButton type="submit" disabled={!isValid} className="w-[134px]">Добавить</CustomButton>
-              <CustomButton type="button" onClick={handleClose} className="w-[134px] bg-[#8F92A11A] text-dark">Отмена</CustomButton>
+              <CustomButton
+                type="submit"
+                disabled={!isValid}
+                className="w-[134px]"
+              >
+                Добавить
+              </CustomButton>
+              <CustomButton
+                type="button"
+                onClick={handleClose}
+                className="w-[134px] bg-[#8F92A11A] text-dark"
+              >
+                Отмена
+              </CustomButton>
             </div>
           </form>
         </Modal>

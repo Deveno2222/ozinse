@@ -2,8 +2,8 @@ import { useState } from "react";
 import { ICategory } from "../types";
 
 interface Props {
-  deleteModal: () => void;
-  onEdit: () => void;
+  deleteModal?: () => void;
+  onEdit?: () => void;
   data: ICategory;
 }
 
