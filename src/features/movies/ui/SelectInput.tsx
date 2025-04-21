@@ -9,7 +9,7 @@ import { forwardRef } from "react";
 
 interface Props {
   label: string;
-  options: { value: string | number; label: string }[];
+  options: { value: string | number | boolean; label: string }[];
   multiple?: boolean;
   error?: boolean;
   helperText?: string;
@@ -85,7 +85,7 @@ const CustomSelect = forwardRef<HTMLSelectElement, Props>(
           {...props}
         >
           {options.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
+            <MenuItem key={String(option.value)} value={String(option.value)}>
               {option.label}
             </MenuItem>
           ))}

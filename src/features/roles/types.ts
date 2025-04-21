@@ -1,7 +1,8 @@
 export interface IRole {
+  roleId?: number;
   name: string;
-  projects: string;
-  categorires: string;
-  users: string;
-  roles: string;
+  isAbleToManageCategory: boolean | string;
+  isAbleToManageMovies: boolean | string;
+  isAbleToManageRole: boolean | string;
+  isAbleToManageUser: boolean | string;
 }

@@ -5,42 +5,104 @@ import Modal from "@/features/modals/components/Modal";
 import { closeModal, openModal } from "@/features/modals/modalSlice";
 import AddButton from "@/features/movies/ui/AddButton";
 import CustomSelect from "@/features/movies/ui/SelectInput";
+import {
+  useAddRoleMutation,
+  useDeleteRoleMutation,
+  useGetRolesQuery,
+  useUpdateRoleMutation,
+} from "@/features/roles/api/rolesApi";
 import RoleCard from "@/features/roles/components/RoleCard";
 import { IRole } from "@/features/roles/types";
 import { RootState } from "@/store/store";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 
 const RolesScreen = () => {
+  const [selectedRole, setSelectedRole] = useState<IRole | null>(null);
+
   const dispatch = useDispatch();
   const { modalType } = useSelector((state: RootState) => state.modal);
+
+  const { data: roles, isError, isLoading } = useGetRolesQuery();
+  const [deleteRole] = useDeleteRoleMutation();
+  const [createRole] = useAddRoleMutation();
+  const [updateRole] = useUpdateRoleMutation();
 
   const {
     control,
     handleSubmit,
     reset,
     formState: { errors, isValid },
-  } = useForm<IRole>({ mode: "onSubmit" });
+  } = useForm<IRole>({
+    mode: "onSubmit",
+  });
 
-  const handleOpen = (type: "delete" | "form" | null) => {
+  const handleOpen = (type: "delete" | "form" | null, role?: IRole) => {
+    if (role) {
+      setSelectedRole(role);
+      reset({
+        ...role,
+        isAbleToManageCategory: role.isAbleToManageCategory.toString(),
+        isAbleToManageMovies: role.isAbleToManageMovies.toString(),
+        isAbleToManageRole: role.isAbleToManageRole.toString(),
+        isAbleToManageUser: role.isAbleToManageUser.toString(),
+      });
+    } else {
+      setSelectedRole(null);
+      reset({});
+    }
+
     dispatch(openModal({ modalType: type }));
   };
 
   const handleClose = () => {
-    reset();
     dispatch(closeModal());
+    setSelectedRole(null);
+    reset({});
   };
 
-  const handleDelete = () => {
-    console.log("Логика удаления");
-    reset();
-    dispatch(closeModal());
+  const handleDelete = async () => {
+    if (!selectedRole) return;
+
+    try {
+      if (selectedRole.roleId) {
+        await deleteRole({ roleId: selectedRole.roleId }).unwrap();
+        console.log("Роль удалена: ", selectedRole.roleId);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    handleClose();
   };
 
-  const submitForm = (e: IRole) => {
-    console.log(e);
-    reset();
-    dispatch(closeModal());
+  const submitForm = async (data: IRole) => {
+    const requestData = {
+      name: data.name,
+      isAbleToManageCategory: data.isAbleToManageCategory === "true",
+      isAbleToManageMovies: data.isAbleToManageMovies === "true",
+      isAbleToManageRole: data.isAbleToManageRole === "true",
+      isAbleToManageUser: data.isAbleToManageUser === "true",
+    };
+
+    try {
+      if (selectedRole?.roleId) {
+        await updateRole({
+          roleId: selectedRole.roleId,
+          form: requestData,
+        }).unwrap();
+        console.log("Роль обновлена");
+      } else {
+        await createRole({ form: requestData }).unwrap();
+        console.log("Роль создана");
+      }
+    } catch (error) {
+      console.error("Ошибка:", error);
+    }
+
+    handleClose();
   };
 
   return (
@@ -48,19 +110,28 @@ const RolesScreen = () => {
       <div className="flex justify-between mb-[30px]">
         <div className="flex items-baseline gap-2">
           <h2 className="text-dark text-[22px] font-bold">Роли</h2>
-          <span className="text-[#171717CC] text-sm font-bold">3</span>
+          <span className="text-[#171717CC] text-sm font-bold">
+            {(roles ?? []).length}
+          </span>
         </div>
         <AddButton onClick={() => handleOpen("form")}>Добавить</AddButton>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-[18px]">
-        <RoleCard openModal={() => handleOpen("delete")} />
-        <RoleCard openModal={() => handleOpen("delete")} />
+        {isLoading && <Loader2 className="animate-spin h-4 w-4" />}
+        {isError && <p className="text-xl text-red-600">Ошибка при получении данных</p>}
+        {roles?.map((item) => (
+          <RoleCard
+            key={item.roleId}
+            data={item}
+            onEdit={() => handleOpen("form", item)}
+            onDelete={() => handleOpen("delete", item)}
+          />
+        ))}
       </div>
-
 
       {/* Модалки */}
       {modalType == "delete" && (
-        <Modal title={"Удалить проект из главной?"}>
+        <Modal title={"Удалить проект из главной?"} onClose={handleClose}>
           <div>
             <p className="text-[#8F92A1] text-base text-center py-8 tracking-[-0.4px]">
               Вы действительно хотите удалить проект из главной?
@@ -83,7 +154,10 @@ const RolesScreen = () => {
         </Modal>
       )}
       {modalType == "form" && (
-        <Modal title={"Добавить проект на главную"}>
+        <Modal
+          title={selectedRole ? "Редактировать роль" : "Добавить роль"}
+          onClose={handleClose}
+        >
           <form onSubmit={handleSubmit(submitForm)}>
             <div className="flex flex-col gap-5 p-8">
               {/* Наименование */}
@@ -94,7 +168,7 @@ const RolesScreen = () => {
                 render={({ field }) => (
                   <CustomInput
                     label="Наименование"
-                    error={!!errors.projects}
+                    error={!!errors.name}
                     helperText={errors.name?.message}
                     {...field}
                   />
@@ -102,73 +176,77 @@ const RolesScreen = () => {
               />
               {/* Проекты */}
               <Controller
-                name="projects"
+                name="isAbleToManageMovies"
                 control={control}
                 rules={{ required: "Заполните поле" }}
                 render={({ field }) => (
                   <CustomSelect
                     label="Проекты"
                     options={[
-                      { value: "editing", label: "Редактирование" },
-                      { value: "readonly", label: "Только чтение" },
+                      { value: "true", label: "Редактирование" },
+                      { value: "false", label: "Только чтение" },
                     ]}
-                    error={!!errors.projects}
-                    helperText={errors.projects?.message}
+                    error={!!errors.isAbleToManageMovies}
+                    helperText={errors.isAbleToManageMovies?.message}
                     {...field}
+                    value={field.value?.toString()}
                   />
                 )}
               />
               {/* Категории */}
               <Controller
-                name="categorires"
+                name="isAbleToManageCategory"
                 control={control}
                 rules={{ required: "Заполните поле" }}
                 render={({ field }) => (
                   <CustomSelect
                     label="Категории"
                     options={[
-                      { value: "editing", label: "Редактирование" },
-                      { value: "readonly", label: "Только чтение" },
+                      { value: "true", label: "Редактирование" },
+                      { value: "false", label: "Только чтение" },
                     ]}
-                    error={!!errors.categorires}
-                    helperText={errors.categorires?.message}
+                    error={!!errors.isAbleToManageCategory}
+                    helperText={errors.isAbleToManageCategory?.message}
                     {...field}
+                    value={field.value?.toString()}
                   />
                 )}
               />
               {/* Пользователи */}
               <Controller
-                name="users"
+                name="isAbleToManageUser"
                 control={control}
                 rules={{ required: "Заполните поле" }}
                 render={({ field }) => (
                   <CustomSelect
                     label="Пользователи"
                     options={[
-                      { value: "editing", label: "Редактирование" },
-                      { value: "readonly", label: "Только чтение" },
+                      { value: "true", label: "Редактирование" },
+                      { value: "false", label: "Только чтение" },
                     ]}
-                    error={!!errors.users}
-                    helperText={errors.users?.message}
+                    error={!!errors.isAbleToManageUser}
+                    helperText={errors.isAbleToManageUser?.message}
                     {...field}
+                    value={field.value?.toString()}
                   />
                 )}
               />
               {/* Роли */}
               <Controller
-                name="roles"
+                name="isAbleToManageRole"
                 control={control}
                 rules={{ required: "Заполните поле" }}
                 render={({ field }) => (
                   <CustomSelect
                     label="Роли"
                     options={[
-                      { value: "editing", label: "Редактирование" },
-                      { value: "readonly", label: "Только чтение" },
+                      { value: "true", label: "Редактирование" },
+                      { value: "false", label: "Только чтение" },
                     ]}
-                    error={!!errors.roles}
-                    helperText={errors.roles?.message}
+                    error={!!errors.isAbleToManageRole}
+                    helperText={errors.isAbleToManageRole?.message}
                     {...field}
+                    value={field.value?.toString()}
                   />
                 )}
               />
@@ -179,7 +257,7 @@ const RolesScreen = () => {
                 disabled={!isValid}
                 className="w-[134px]"
               >
-                Добавить
+                {selectedRole ? "Сохранить" : "Добавить"}
               </CustomButton>
               <CustomButton
                 type="button"

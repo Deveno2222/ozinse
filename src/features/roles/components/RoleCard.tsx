@@ -1,12 +1,16 @@
+import { IRole } from "../types";
+
 interface Props {
-  openModal: () => void;
+  data: IRole;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-const RoleCard = ({ openModal }: Props) => {
+const RoleCard = ({ onEdit, onDelete, data }: Props) => {
   return (
     <div className="flex bg-white p-4 rounded-2xl max-w-[538px] justify-between">
       <div className="flex flex-col gap-4">
-        <h3 className="font-bold text-base">Менеджер 1</h3>
+        <h3 className="font-bold text-base">{data.name}</h3>
         <div className="flex flex-col gap-[10px]">
           {/* Проекты */}
           <div className="flex items-center gap-1 text-xs">
@@ -26,7 +30,11 @@ const RoleCard = ({ openModal }: Props) => {
             </svg>
             <div>
               <span>Проекты </span>
-              <span className="text-backgroundgray">(Редактирование)</span>
+              <span className="text-backgroundgray">
+                (
+                {data.isAbleToManageMovies ? "Редактирование" : "Только чтение"}
+                )
+              </span>
             </div>
           </div>
           {/* Категории */}
@@ -47,7 +55,13 @@ const RoleCard = ({ openModal }: Props) => {
             </svg>
             <div>
               <span>Категории </span>
-              <span className="text-backgroundgray">(Только чтение)</span>
+              <span className="text-backgroundgray">
+                (
+                {data.isAbleToManageCategory
+                  ? "Редактирование"
+                  : "Только чтение"}
+                )
+              </span>
             </div>
           </div>
           {/* Пользователи */}
@@ -68,14 +82,16 @@ const RoleCard = ({ openModal }: Props) => {
             </svg>
             <div>
               <span>Пользователи </span>
-              <span className="text-backgroundgray">(Только чтение)</span>
+              <span className="text-backgroundgray">
+                ({data.isAbleToManageUser ? "Редактирование" : "Только чтение"})
+              </span>
             </div>
           </div>
         </div>
       </div>
       <div className="flex gap-3 items-end">
         {/* Edit */}
-        <div>
+        <div onClick={onEdit}>
           <svg
             className="hover:opacity-80 cursor-pointer transition-opacity"
             width="16"
@@ -94,7 +110,7 @@ const RoleCard = ({ openModal }: Props) => {
           </svg>
         </div>
         {/* Trash */}
-        <div onClick={openModal}>
+        <div onClick={onDelete}>
           <svg
             className="hover:opacity-80 cursor-pointer transition-opacity"
             width="16"
