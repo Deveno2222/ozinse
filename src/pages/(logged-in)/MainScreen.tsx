@@ -1,5 +1,6 @@
 import DropDown from "@/components/DropDown/DropDown";
 import DropDownWithIcon from "@/components/DropDown/DropDownWithIcon";
+import ScreenPagination from "@/components/ScreenPagination/ScreenPagination";
 import { Button } from "@/components/ui/button";
 import { useGetCategoriesQuery } from "@/features/categories/api/categoryApi";
 import { useGetGenresQuery } from "@/features/genre/api/genreApi";
@@ -13,13 +14,16 @@ import MovieCard from "@/features/movies/components/MovieCard";
 import { IMovie } from "@/features/movies/types";
 import AddButton from "@/features/movies/ui/AddButton";
 import { RootState } from "@/store/store";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 
 const MainScreen = () => {
   const dispatch = useDispatch();
   const { modalType } = useSelector((state: RootState) => state.modal);
+
+  const [page, setPage] = useState(1);
+  const size = 12;
 
   const [selectedMovie, setSelectedMovie] = useState<IMovie | null>(null);
   const [deleteMovie] = useDeleteMovieMutation();
@@ -51,8 +55,12 @@ const MainScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
   const [selectedYear, setSelectedYear] = useState(years[0].toString());
 
+  useEffect(() => {
+    setPage(1);
+  }, [selectedSort, selectedType, selectedCategory, selectedYear]);
+
   const {
-    data: movies,
+    data: moviesData,
     isLoading,
     isError,
   } = useGetMoviesQuery({
@@ -73,6 +81,8 @@ const MainScreen = () => {
         ? "2"
         : undefined,
     year: selectedYear === "Выберите год" ? undefined : selectedYear,
+    page,
+    size,
   });
 
   const handleFilter = (filterName: string, value: string) => {
@@ -120,6 +130,9 @@ const MainScreen = () => {
     handleClose();
   };
 
+  const movies = moviesData?.data || [];
+  const totalCount = moviesData?.totalCount || 0;
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -128,56 +141,65 @@ const MainScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#8F92A10D] rounded-tl-3xl py-10 px-12 overflow-hidden">
-      <div className="flex justify-between mb-[30px]">
-        <div className="flex items-baseline gap-2">
-          <h2 className="text-dark text-[22px] font-bold">Проекты</h2>
-          <span className="text-[#171717CC] text-sm font-bold">
-            {movies?.length}
-          </span>
+    <div className="flex flex-col justify-between min-h-screen bg-[#8F92A10D] rounded-tl-3xl py-10 px-12 overflow-hidden">
+      <div>
+        <div className="flex justify-between mb-[30px]">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-dark text-[22px] font-bold">Проекты</h2>
+            <span className="text-[#171717CC] text-sm font-bold">
+              {totalCount}
+            </span>
+          </div>
+          <Link to={"/project/add"}>
+            <AddButton>Добавить</AddButton>
+          </Link>
         </div>
-        <Link to={"/project/add"}>
-          <AddButton>Добавить</AddButton>
-        </Link>
+
+        <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-0 mb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 items-center gap-4">
+            <DropDown
+              label="Сортировать"
+              buttonText={selectedSort}
+              content={mockSortFilter}
+              onChange={(val) => handleFilter("sortBy", val)}
+            />
+            <DropDown
+              label="Категория"
+              buttonText={selectedCategory}
+              content={categories}
+              onChange={(val) => handleFilter("category", val)}
+            />
+            <DropDown
+              label="Тип"
+              buttonText={selectedType}
+              content={genres}
+              onChange={(val) => handleFilter("type", val)}
+            />
+          </div>
+          <DropDownWithIcon
+            buttonText={selectedYear}
+            content={years.map(String)}
+            onChange={(val) => handleFilter("year", val)}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px] justify-items-center">
+          {movies?.map((movie) => (
+            <MovieCard
+              key={movie.movieId}
+              data={movie}
+              openModal={() => handleOpen("delete", movie)}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row justify-between w-full gap-4 lg:gap-0 mb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 items-center gap-4">
-          <DropDown
-            label="Сортировать"
-            buttonText={selectedSort}
-            content={mockSortFilter}
-            onChange={(val) => handleFilter("sortBy", val)}
-          />
-          <DropDown
-            label="Категория"
-            buttonText={selectedCategory}
-            content={categories}
-            onChange={(val) => handleFilter("category", val)}
-          />
-          <DropDown
-            label="Тип"
-            buttonText={selectedType}
-            content={genres}
-            onChange={(val) => handleFilter("type", val)}
-          />
-        </div>
-        <DropDownWithIcon
-          buttonText={selectedYear}
-          content={years.map(String)}
-          onChange={(val) => handleFilter("year", val)}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-[18px] justify-items-center">
-        {movies?.map((movie) => (
-          <MovieCard
-            key={movie.movieId}
-            data={movie}
-            openModal={() => handleOpen("delete", movie)}
-          />
-        ))}
-      </div>
+      <ScreenPagination
+        page={page}
+        setPage={setPage}
+        totalCount={totalCount}
+        size={size}
+      />
 
       {modalType === "delete" && (
         <Modal title={"Удалить проект?"} onClose={handleClose}>

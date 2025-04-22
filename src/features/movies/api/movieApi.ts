@@ -1,42 +1,29 @@
 import { api } from "@/services/api/api";
-import {
-  IEpisode,
-  IEpisodeFetch,
-  IMovie,
-  IMovieForm,
-  IMovieInfo,
-} from "../types";
-import { url } from "inspector";
+import { IEpisodeFetch, IMovieInfo } from "../types";
 
 export const movieApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getMovies: builder.query<
-      IMovieInfo[],
+      { data: IMovieInfo[]; totalCount: number },
       {
         genre?: number;
         category?: string;
         sortBy?: string;
         year?: string;
+        page?: number;
+        size?: number;
       }
     >({
       query: (params) => {
         const queryParams: Record<string, string | number> = {};
 
-        if (params.sortBy) {
-          queryParams.sortBy = params.sortBy;
-        }
+        if (params.sortBy) queryParams.sortBy = params.sortBy;
+        if (params.category) queryParams.categoryId = params.category;
+        if (params.genre) queryParams.genreId = params.genre;
+        if (params.year) queryParams.year = params.year;
 
-        if (params.category) {
-          queryParams.categoryId = params.category;
-        }
-
-        if (params.genre) {
-          queryParams.genreId = params.genre;
-        }
-
-        if (params.year) {
-          queryParams.year = params.year;
-        }
+        if (params.page) queryParams.page = params.page;
+        if (params.size) queryParams.size = params.size;
 
         return {
           url: "/movies",
@@ -44,8 +31,13 @@ export const movieApi = api.injectEndpoints({
           params: queryParams,
         };
       },
-      transformResponse: (response: { result: IMovieInfo[] }) =>
-        response.result,
+      transformResponse: (response: {
+        result: IMovieInfo[];
+        metadata: { additionalProp1: number };
+      }) => ({
+        data: response.result,
+        totalCount: response.metadata.additionalProp1,
+      }),
       providesTags: ["Movies"],
     }),
 

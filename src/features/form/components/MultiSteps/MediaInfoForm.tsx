@@ -137,9 +137,11 @@ export default function MediaInfoForm({
 
           const updatedMovies = await refetch();
 
+          const moviesList = updatedMovies.data?.data || [];
+
           await new Promise((resolve) => setTimeout(resolve, 300));
 
-          const sortedMovies = [...(updatedMovies.data || [])].sort(
+          const sortedMovies = [...moviesList].sort(
             (a, b) => b.movieId - a.movieId
           );
 

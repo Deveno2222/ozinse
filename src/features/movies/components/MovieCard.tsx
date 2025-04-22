@@ -54,7 +54,7 @@ const MovieCard = ({ openModal, data }: Props) => {
         <img
           src={imageUrl ?? imgPlaceholder}
           alt="Постер фильма"
-          className="min-h-[334px] rounded-2xl"
+          className="min-h-[334px] h-[334px] w-[228px] rounded-2xl"
         />
         {data.seriesCount > 0 && (
           <div className="absolute top-3 left-3 bg-[#171717CC] text-white font-medium py-[2px] px-2 rounded-[8px] h-[28px] flex items-center justify-center">
