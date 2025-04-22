@@ -1,6 +1,12 @@
 import CustomButton from "@/components/CustomButton";
 import { Button } from "@/components/ui/button";
-import { useGetMainMoviesQuery } from "@/features/main/api/mainMovieApi";
+import {
+  useAddMainMovieMutation,
+  useDeleteMainMovieMutation,
+  useGetMainMoviesQuery,
+  useUpdateMainMovieMutation,
+} from "@/features/main/api/mainMovieApi";
+import MainMoviePreview from "@/features/main/components/MainMoviePreview";
 
 import { IMainMovie } from "@/features/main/types";
 import Modal from "@/features/modals/components/Modal";
@@ -10,6 +16,7 @@ import ImageUpload from "@/features/movies/ui/ImageUpload";
 import CustomSelect from "@/features/movies/ui/SelectInput";
 import { RootState } from "@/store/store";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 import { Controller, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,31 +30,78 @@ const ProjectsOnMain = () => {
     reset,
   } = useForm<IMainMovie>({ mode: "onSubmit" });
 
+  const [selectedMovie, setSelectedMovie] = useState<IMainMovie | null>(null);
+
   // Модалка
   const dispatch = useDispatch();
   const { modalType } = useSelector((state: RootState) => state.modal);
 
-  const { data, isLoading, isError } = useGetMainMoviesQuery({});
+  const { data, isLoading, isError } = useGetMainMoviesQuery();
+  const [addMovie] = useAddMainMovieMutation();
+  const [deleteMovie] = useDeleteMainMovieMutation();
+  const [updateMovie] = useUpdateMainMovieMutation();
 
-  const handleOpen = (type: "delete" | "form" | "success" | null) => {
+  const handleOpen = (
+    type: "delete" | "form" | "success" | null,
+    movie?: IMainMovie
+  ) => {
+    if (movie) {
+      setSelectedMovie(movie);
+      reset(movie);
+    } else {
+      setSelectedMovie(null);
+      reset({});
+    }
     dispatch(openModal({ modalType: type }));
   };
 
   const handleClose = () => {
     dispatch(closeModal());
-    reset();
+    setSelectedMovie(null);
+    reset({});
   };
 
-  const handleDelete = () => {
-    console.log("Логика удаления");
-    reset();
-    dispatch(closeModal());
+  const handleDelete = async () => {
+    if (!selectedMovie) return;
+    try {
+      if (selectedMovie.movieId) {
+        await deleteMovie({ id: selectedMovie.movieId }).unwrap();
+        console.log("Фильм удален из главной");
+      }
+    } catch (error) {
+      console.error("Ошибка при удалении фильма: ", error);
+    }
+    handleClose();
   };
 
-  const submitForm = (e: IMainMovie) => {
-    console.log(e);
-    reset();
-    dispatch(closeModal());
+  const submitForm = async (e: IMainMovie) => {
+    const imageFormData = new FormData();
+
+    if (e.previewImg instanceof File) {
+      imageFormData.append("image", e.previewImg);
+    }
+
+    try {
+      if (selectedMovie?.movieId) {
+        await updateMovie({
+          movieId: e.movieId ?? 0,
+          order: e.order,
+          formData: imageFormData,
+        }).unwrap();
+        console.log("Проект обновлен");
+      } else {
+        await addMovie({
+          movieId: e.movieId ?? 0,
+          order: e.order,
+          formData: imageFormData,
+        }).unwrap();
+        console.log("Проект добавлен");
+      }
+    } catch (error) {
+      console.error("Ошибка:", error);
+    }
+
+    handleClose();
   };
 
   return (
@@ -59,7 +113,7 @@ const ProjectsOnMain = () => {
             Проекты на главной
           </h2>
           <span className="text-[#171717CC] text-sm font-bold">
-            {data?.length | 0}
+            {data?.length ?? 0}
           </span>
         </div>
         <AddButton onClick={() => handleOpen("form")}>Добавить</AddButton>
@@ -69,8 +123,15 @@ const ProjectsOnMain = () => {
         {isError && (
           <p className="text-xl text-red-600">Ошибка при загрузке данных</p>
         )}
-        {isLoading && <Loader2 className="animate-spin w-6 h-6"/>}
-        {data && <div>Данные</div>}
+        {isLoading && <Loader2 className="animate-spin w-6 h-6" />}
+        {data?.map((item) => (
+          <MainMoviePreview
+            key={item.movieId}
+            openModalDelete={() => handleOpen("delete", item)}
+            openModalForm={() => handleOpen("form", item)}
+            movieData={item}
+          />
+        ))}
         {/* <MainMoviePreview openModalDelete={() => handleOpen("delete")} />
         <MainMoviePreview openModalDelete={() => handleOpen("delete")} /> */}
       </div>
@@ -99,7 +160,9 @@ const ProjectsOnMain = () => {
         </Modal>
       )}
       {modalType == "form" && (
-        <Modal title={"Добавить проект на главную"}>
+        <Modal
+          title={selectedMovie ? "Редактировать проект" : "Добавить проект"}
+        >
           <form onSubmit={handleSubmit(submitForm)}>
             <div className="flex flex-col gap-4 p-8">
               {/* Выберите проект */}
@@ -159,7 +222,7 @@ const ProjectsOnMain = () => {
                 disabled={!isValid}
                 className="w-[134px]"
               >
-                Добавить
+                {selectedMovie ? "Сохранить" : "Добавить"}
               </CustomButton>
               <CustomButton
                 type="button"

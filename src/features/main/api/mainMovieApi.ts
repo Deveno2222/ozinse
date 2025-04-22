@@ -1,8 +1,9 @@
 import { api } from "@/services/api/api";
+import { IMainMovie } from "../types";
 
 const mainMovieApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getMainMovies: builder.query({
+    getMainMovies: builder.query<IMainMovie[], void>({
       query: () => ({
         url: "/movies/main-page",
         method: "GET",
@@ -29,6 +30,18 @@ const mainMovieApi = api.injectEndpoints({
       }),
       invalidatesTags: ["MainMovies"],
     }),
+
+    updateMainMovie: builder.mutation<
+      void,
+      { movieId: number; order: number; formData: FormData }
+    >({
+      query: ({ movieId, order, formData }) => ({
+        url: `/movies/${movieId}/main-page?order=${order}`,
+        method: "PATCH",
+        body: formData,
+      }),
+      invalidatesTags: ["MainMovies"],
+    }),
   }),
 });
 
@@ -36,4 +49,5 @@ export const {
   useAddMainMovieMutation,
   useDeleteMainMovieMutation,
   useGetMainMoviesQuery,
+  useUpdateMainMovieMutation,
 } = mainMovieApi;
